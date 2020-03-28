@@ -121,6 +121,7 @@ def bbox_target_rbbox_single(pos_bboxes,
 
     return labels, label_weights, bbox_targets, bbox_weights
 
+
 def rbbox_target_rbbox(pos_rbboxes_list,
                          neg_rbboxes_list,
                          pos_gt_rbboxes_list,
@@ -147,6 +148,7 @@ def rbbox_target_rbbox(pos_rbboxes_list,
         bbox_targets = torch.cat(bbox_targets, 0)
         bbox_weights = torch.cat(bbox_weights, 0)
     return labels, label_weights, bbox_targets, bbox_weights
+
 
 def rbbox_target_rbbox_single(pos_rbboxes,
                        neg_rbboxes,
@@ -195,7 +197,6 @@ def rbbox_target_rbbox_single(pos_rbboxes,
         label_weights[-num_neg:] = 1.0
 
     return labels, label_weights, bbox_targets, bbox_weights
-
 
 
 def expand_target_rbbox(dbbox_targets, dbbox_weights, labels, num_classes):

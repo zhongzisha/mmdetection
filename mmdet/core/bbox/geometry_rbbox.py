@@ -5,6 +5,7 @@ import numpy as np
 import DOTA_devkit.polyiou as polyiou
 from mmdet.core.bbox.transforms_rbbox import RotBox2Polys, poly2bbox, mask2poly, Tuplelist2Polylist
 
+
 def bbox_overlaps_cy(boxes, query_boxes):
     box_device = boxes.device
     boxes_np = boxes.cpu().numpy().astype(np.float)
@@ -18,6 +19,7 @@ def bbox_overlaps_cy(boxes, query_boxes):
 #     query_boxes_np = query_boxes.cpu().numpy().astype(np.float)
 #     ious = bbox_overlaps_cython_v2(boxes_np, query_boxes_np)
 #     return torch.from_numpy(ious).to(box_device)
+
 
 def bbox_overlaps_np(boxes, query_boxes):
     """
@@ -76,6 +78,7 @@ def bbox_overlaps_np(boxes, query_boxes):
 #     overlaps = iw * ih / ua
 #
 #     return overlaps
+
 
 def bbox_overlaps_np_v2(bboxes1, bboxes2):
     """
@@ -172,12 +175,6 @@ def bbox_overlaps_np_v3(bboxes1, bboxes2, mode='iou', is_aligned=False):
     return ious
 
 
-
-
-
-
-
-
 def bbox_overlaps_fp16(bboxes1, bboxes2, mode='iou', is_aligned=False):
     """
     The fp16 version exist some bugs
@@ -244,6 +241,7 @@ def bbox_overlaps_fp16(bboxes1, bboxes2, mode='iou', is_aligned=False):
 
     return ious.float()
 
+
 def mask_overlaps():
     pass
 
@@ -253,6 +251,7 @@ def mask_overlaps():
 #     query_boxes_np = query_boxes.cpu().numpy().astype(np.float)
 #     ious = bbox_overlaps_cython(boxes_np, query_boxes_np)
 #     return torch.from_numpy(ious).to(box_device)
+
 
 def rbbox_overlaps_cy_warp(rbboxes, query_boxes):
     # TODO: first calculate the hbb overlaps, for overlaps > 0, calculate the obb overlaps
@@ -292,10 +291,12 @@ def rbbox_overlaps_cy_warp(rbboxes, query_boxes):
 
     return torch.from_numpy(ious).to(box_device)
 
+
 def rbbox_overlaps_hybrid(boxes, query_boxes):
     # TODO: first calculate the hbb overlaps, for overlaps > 0, use the gpu_overlaps to calculate the obb overlaps
     # box_device = boxes.device
     pass
+
 
 def rbbox_overlaps_cy(boxes_np, query_boxes_np):
     # TODO: first calculate the hbb overlaps, for overlaps > 0, calculate the obb overlaps

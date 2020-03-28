@@ -43,6 +43,7 @@ def dbbox2delta(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
     # TODO: expand bbox regression
     return deltas
 
+
 def delta2dbbox(Rrois,
                 deltas,
                 means=[0, 0, 0, 0, 0],
@@ -96,6 +97,7 @@ def delta2dbbox(Rrois,
     bboxes = torch.stack([gx, gy, gw, gh, gangle], dim=-1).view_as(deltas)
     return bboxes
 
+
 def dbbox2delta_v3(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
     """
     This version removes the module operation
@@ -136,6 +138,7 @@ def dbbox2delta_v3(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1])
     deltas = deltas.sub_(means).div_(stds)
 
     return deltas
+
 
 def delta2dbbox_v3(Rrois,
                 deltas,
@@ -191,6 +194,7 @@ def delta2dbbox_v3(Rrois,
     bboxes = torch.stack([gx, gy, gw, gh, gangle], dim=-1).view_as(deltas)
     return bboxes
 
+
 def dbbox2delta_v2(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
     """
     :param proposals: (x_ctr, y_ctr, w, h, angle)
@@ -235,6 +239,7 @@ def dbbox2delta_v2(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1])
 
     return deltas
 
+
 def delta2dbbox_v2(Rrois,
                 deltas,
                 means=[0, 0, 0, 0, 0],
@@ -275,6 +280,7 @@ def delta2dbbox_v2(Rrois,
 
     bboxes = torch.stack([gx, gy, gw, gh, gangle], dim=-1).view_as(deltas)
     return bboxes
+
 
 def choose_best_match_batch(Rrois, gt_rois):
     """
@@ -320,6 +326,7 @@ def choose_best_match_batch(Rrois, gt_rois):
 
     return gt_rois_new
 
+
 def choose_best_Rroi_batch(Rroi):
     """
     There are many instances with large aspect ratio, so we choose the point, previous is long side,
@@ -340,6 +347,7 @@ def choose_best_Rroi_batch(Rroi):
     Rroi[:, 4] = Rroi[:, 4] % np.pi
 
     return Rroi
+
 
 def best_match_dbbox2delta(Rrois, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
     """
@@ -364,6 +372,7 @@ def best_match_dbbox2delta(Rrois, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1,
 
     return bbox_targets
 
+
 # TODO: check the negative situation of flip
 def dbbox_flip(dbboxes, img_shape):
     """
@@ -380,6 +389,7 @@ def dbbox_flip(dbboxes, img_shape):
     flipped[:, 4::5] = np.pi - dbboxes[:, 4::5]
 
     return flipped
+
 
 def dbbox_mapping(dbboxes, img_shape, scale_factor, flip):
     """
@@ -400,6 +410,7 @@ def dbbox_mapping(dbboxes, img_shape, scale_factor, flip):
 
     return new_dbboxes
 
+
 def dbbox_mapping_back(dbboxes, img_shape, scale_factor, flip):
     """
     Map dbboxes from testing scael to original image scale
@@ -415,6 +426,7 @@ def dbbox_mapping_back(dbboxes, img_shape, scale_factor, flip):
     new_dbboxes[..., 2::5] = new_dbboxes[..., 2::5] / scale_factor
     new_dbboxes[..., 3::5] = new_dbboxes[..., 3::5] / scale_factor
     return new_dbboxes
+
 
 def dbbox_rotate_mapping(bboxes, img_shape, angle):
     """
@@ -519,6 +531,8 @@ def dbbox2delta_warp(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1
     :param stds:
     :return:
     """
+    pass
+
 
 def TuplePoly2Poly(poly):
     outpoly = [poly[0][0], poly[0][1],
@@ -528,11 +542,13 @@ def TuplePoly2Poly(poly):
                        ]
     return outpoly
 
+
 def Tuplelist2Polylist(tuple_poly_list):
     polys = map(TuplePoly2Poly, tuple_poly_list)
 
     return list(polys)
-#
+
+
 # def mask2poly_single(binary_mask):
 #     """
 #
@@ -552,6 +568,7 @@ def Tuplelist2Polylist(tuple_poly_list):
     # except:
     #     # TODO: assure there is no empty mask_poly
     #     return []
+
 
 # TODO: test the function
 def mask2poly_single(binary_mask):
@@ -574,10 +591,12 @@ def mask2poly_single(binary_mask):
         pdb.set_trace()
     return poly
 
+
 def mask2poly(binary_mask_list):
     polys = map(mask2poly_single, binary_mask_list)
     # polys = np.stack(polys
     return list(polys)
+
 
 def gt_mask_bp_obbs(gt_masks, with_module=True):
 
@@ -588,14 +607,17 @@ def gt_mask_bp_obbs(gt_masks, with_module=True):
 
     return gt_obbs
 
+
 def gt_mask_bp_obbs_list(gt_masks_list):
 
     gt_obbs_list = map(gt_mask_bp_obbs, gt_masks_list)
 
     return list(gt_obbs_list)
 
+
 def cal_line_length(point1, point2):
     return math.sqrt( math.pow(point1[0] - point2[0], 2) + math.pow(point1[1] - point2[1], 2))
+
 
 def get_best_begin_point_single(coordinate):
     x1 = coordinate[0][0]
@@ -628,9 +650,11 @@ def get_best_begin_point_single(coordinate):
         # print("choose one direction!")
     return  combinate[force_flag]
 
+
 def get_best_begin_point_warp_single(coordinate):
 
     return TuplePoly2Poly(get_best_begin_point_single(coordinate))
+
 
 def get_best_begin_point(coordinate_list):
     best_coordinate_list = map(get_best_begin_point_warp_single, coordinate_list)
@@ -650,6 +674,7 @@ def get_best_begin_point(coordinate_list):
 #     """
 #     polys = polys.view(-1, 4, 2)
 
+
 def xy2wh(boxes):
     """
 
@@ -664,6 +689,7 @@ def xy2wh(boxes):
     ex_ctr_y = boxes[..., 1] + 0.5 * (ex_heights - 1.0)
 
     return torch.cat((ex_ctr_x.unsqueeze(1), ex_ctr_y.unsqueeze(1), ex_widths.unsqueeze(1), ex_heights.unsqueeze(1)), 1)
+
 
 def xy2wh_c(boxes):
     """
@@ -685,6 +711,7 @@ def xy2wh_c(boxes):
 
     return out_boxes
 
+
 def wh2xy(bboxes):
     """
     :param bboxes: (x_ctr, y_ctr, w, h) (n, 4)
@@ -698,6 +725,7 @@ def wh2xy(bboxes):
     ymaxs = bboxes[..., 1] + (bboxes[..., 3] - 1) / 2.0
 
     return torch.cat((xmins.unsqueeze(1), ymins.unsqueeze(1), xmaxs.unsqueeze(1), ymaxs.unsqueeze(1)), 1)
+
 
 def wh2xy_c(bboxes):
     """
@@ -717,6 +745,7 @@ def wh2xy_c(bboxes):
     out_bboxes[..., 3::4] = ymaxs
     return out_bboxes
 
+
 def hbb2obb(bboxes):
     """
 
@@ -730,6 +759,7 @@ def hbb2obb(bboxes):
     dbboxes = torch.cat((c_bboxes, initial_angles), 1)
 
     return dbboxes
+
 
 def hbb2obb_v2(boxes):
     """
@@ -749,6 +779,7 @@ def hbb2obb_v2(boxes):
 
     return dbboxes
 
+
 def roi2droi(rois):
     """
     :param rois: Tensor: shape (n, 5), [batch_ind, x1, y1, x2, y2]
@@ -758,6 +789,7 @@ def roi2droi(rois):
     obbs = hbb2obb_v2(hbbs)
 
     return torch.cat((rois[:, 0].unsqueeze(1), obbs), 1)
+
 
 def polygonToRotRectangle_batch(bbox, with_module=True):
     """
@@ -814,6 +846,7 @@ def polygonToRotRectangle_batch(bbox, with_module=True):
     dboxes = np.concatenate((center[:, 0].astype(np.float), center[:, 1].astype(np.float), w, h, angle), axis=1)
     return dboxes
 
+
 def RotBox2Polys(dboxes):
     """
     :param dboxes: (x_ctr, y_ctr, w, h, angle)
@@ -850,6 +883,7 @@ def RotBox2Polys(dboxes):
 
     polys = np.concatenate((x1, y1, x2, y2, x3, y3, x4, y4), axis=1)
     return polys
+
 
 def RotBox2Polys_torch(dboxes):
     """
@@ -908,6 +942,7 @@ def poly2bbox(polys):
 
     return np.concatenate((xmin, ymin, xmax, ymax), 1)
 
+
 def dbbox2roi(dbbox_list):
     """
     Convert a list of dbboxes to droi format.
@@ -926,6 +961,7 @@ def dbbox2roi(dbbox_list):
     drois = torch.cat(drois_list, 0)
     return drois
 
+
 def droi2dbbox(drois):
     dbbox_list = []
     img_ids = torch.unique(drois[:, 0].cpu(), sorted=True)
@@ -934,6 +970,7 @@ def droi2dbbox(drois):
         dbbox = drois[inds, 1:]
         dbbox_list.append(dbbox)
     return dbbox_list
+
 
 def dbbox2result(dbboxes, labels, num_classes):
     """
@@ -952,6 +989,7 @@ def dbbox2result(dbboxes, labels, num_classes):
         dbboxes = dbboxes.cpu().numpy()
         labels = labels.cpu().numpy()
         return [dbboxes[labels == i, :] for i in range(num_classes - 1)]
+
 
 def distance2bbox(points, distance, max_shape=None):
     """Decode distance prediction to bounding box.
