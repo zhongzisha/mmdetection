@@ -21,9 +21,9 @@ __all__ = [
     'CustomDataset', 'XMLDataset', 'CocoDataset', 'VOCDataset',
     'CityscapesDataset', 'GroupSampler', 'DistributedGroupSampler',
     'build_dataloader', 'ConcatDataset', 'RepeatDataset', 'WIDERFaceDataset',
-    'DATASETS', 'build_dataset',
     'ExtraAugmentation', 'HRSCL1Dataset',
     'DOTADataset', 'DOTA2Dataset', 'DOTA2Dataset_v2','DOTADataset_v3',
     'DOTA1_5Dataset', 'DOTA1_5Dataset_v3', 'DOTA1_5Dataset_v2',
-    'DOTA2Dataset_v4'
+    'DOTA2Dataset_v4',
+    'DATASETS', 'build_dataset'
 ]
