@@ -1,11 +1,12 @@
 import numpy as np
 import torch.nn as nn
 from mmcv.cnn import normal_init
+from mmdet.ops import ConvModule
 
 # from .anchor_head import AnchorHead
 from .anchor_head_rbbox import AnchorHeadRbbox
 from ..registry import HEADS
-from ..utils import bias_init_with_prob, ConvModule
+from ..utils import bias_init_with_prob
 
 
 @HEADS.register_module
