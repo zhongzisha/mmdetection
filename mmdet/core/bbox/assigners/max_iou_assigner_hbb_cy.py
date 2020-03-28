@@ -2,7 +2,8 @@ import torch
 
 from .base_assigner import BaseAssigner
 from .assign_result import AssignResult
-from ..geometry import bbox_overlaps, bbox_overlaps_cy, bbox_overlaps_np_v3
+from ..geometry import bbox_overlaps
+from ..geometry_rbbox import box_overlaps_cy, bbox_overlaps_np_v3
 
 
 class MaxIoUAssignerCy(BaseAssigner):
