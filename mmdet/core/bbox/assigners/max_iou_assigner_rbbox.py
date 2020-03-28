@@ -2,7 +2,8 @@ import torch
 
 from .base_assigner import BaseAssigner
 from .assign_result import AssignResult
-from ..geometry import bbox_overlaps, rbbox_overlaps_cy_warp
+from ..geometry import bbox_overlaps
+from ..geometry_rbbox import rbbox_overlaps_cy_warp
 
 class MaxIoUAssignerRbbox(BaseAssigner):
     """Assign a corresponding gt bbox or background to each bbox.
