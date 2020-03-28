@@ -3,11 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from mmdet.core import delta2dbbox, multiclass_nms_rbbox, \
-    bbox_target_rbbox, accuracy, rbbox_target_rbbox,\
+    bbox_target_rbbox, rbbox_target_rbbox,\
     choose_best_Rroi_batch, delta2dbbox_v2, \
     Pesudomulticlass_nms_rbbox, delta2dbbox_v3, hbb2obb_v2
 from ..builder import build_loss
 from ..registry import HEADS
+from ..losses import accuracy
 
 
 @HEADS.register_module

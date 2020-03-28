@@ -2,7 +2,7 @@ import torch.nn as nn
 
 from .rbbox_head import BBoxHeadRbbox
 from ..registry import HEADS
-from ..utils import ConvModule
+from mmdet.ops import ConvModule
 
 
 @HEADS.register_module

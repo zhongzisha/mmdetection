@@ -157,6 +157,71 @@ class BBoxTestMixin(object):
         return det_bboxes, det_labels
 
 
+class RBBoxTestMixin(object):
+
+    def simple_test_rbboxes(self,
+                            x,
+                            img_meta,
+                            proposals,
+                            rcnn_test_cfg,
+                            rescale=False):
+        """Test only det rbboxes without augmentation."""
+        rois = bbox2roi(proposals)
+        roi_feats = self.rbbox_roi_extractor(
+            x[:len(self.rbbox_roi_extractor.featmap_strides)], rois)
+        if self.with_shared_head:
+            roi_feats = self.shared_head(roi_feats)
+        cls_score, bbox_pred = self.rbbox_head(roi_feats)
+        img_shape = img_meta[0]['img_shape']
+        scale_factor = img_meta[0]['scale_factor']
+        det_rbboxes, det_labels = self.rbbox_head.get_det_bboxes(
+            rois,
+            cls_score,
+            bbox_pred,
+            img_shape,
+            scale_factor,
+            rescale=rescale,
+            cfg=rcnn_test_cfg)
+        return det_rbboxes, det_labels
+
+    def simple_test_rbboxes_v2(self,
+                               x,
+                               img_meta,
+                               det_bboxes,
+                               rcnn_test_cfg,
+                               rescale=False):
+        # image shape of the first image in the batch (only one)
+        ori_shape = img_meta[0]['ori_shape']
+        scale_factor = img_meta[0]['scale_factor']
+        if det_bboxes.shape[0] == 0:
+            det_rbboxes = det_bboxes.new_zeros((0, 6))
+            det_labels = det_bboxes.new_zeros((0, ), dtype=torch.long)
+        else:
+            _bboxes = (
+                det_bboxes[:, :4] * scale_factor if rescale else det_bboxes)
+            rbbox_rois = bbox2roi([_bboxes])
+            rbbox_feats = self.rbbox_roi_extractor(
+                x[:len(self.rbbox_roi_extractor.featmap_strides)], rbbox_rois)
+            if self.with_shared_head:
+                rbbox_feats = self.shared_head(rbbox_feats)
+            cls_score, rbbox_pred = self.rbbox_head(rbbox_feats)
+            img_shape = img_meta[0]['img_shape']
+            scale_factor = img_meta[0]['scale_factor']
+            det_rbboxes, det_labels = self.rbbox_head.get_det_bboxes(
+                rbbox_rois,
+                cls_score,
+                rbbox_pred,
+                img_shape,
+                scale_factor,
+                rescale=rescale,
+                cfg=rcnn_test_cfg
+            )
+        return det_rbboxes, det_labels
+
+    def aug_test_rbboxes(self, feat, img_metas, proposal_list, rcnn_test_cfg):
+        assert NotImplementedError
+
+
 class MaskTestMixin(object):
 
     if sys.version_info >= (3, 7):
