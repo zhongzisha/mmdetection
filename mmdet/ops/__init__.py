@@ -17,6 +17,8 @@ from .scale import Scale
 from .sigmoid_focal_loss import SigmoidFocalLoss, sigmoid_focal_loss
 from .upsample import build_upsample_layer
 from .utils import get_compiler_version, get_compiling_cuda_version
+from .roi_align_rotated import RoIAlignRotated, roi_align_rotated
+from .psroi_align_rotated import PSRoIAlignRotated, psroi_align_rotated
 
 __all__ = [
     'nms', 'soft_nms', 'RoIAlign', 'roi_align', 'RoIPool', 'roi_pool',
@@ -27,5 +29,6 @@ __all__ = [
     'MaskedConv2d', 'ContextBlock', 'GeneralizedAttention', 'NonLocal2D',
     'get_compiler_version', 'get_compiling_cuda_version', 'build_conv_layer',
     'ConvModule', 'ConvWS2d', 'conv_ws_2d', 'build_norm_layer', 'Scale',
-    'build_upsample_layer'
+    'build_upsample_layer',
+    'RoIAlignRotated', 'roi_align_rotated', 'PSRoIAlignRotated', 'psroi_align_rotated',
 ]
