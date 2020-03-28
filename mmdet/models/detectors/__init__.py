@@ -16,9 +16,19 @@ from .rpn import RPN
 from .single_stage import SingleStageDetector
 from .two_stage import TwoStageDetector
 
+from .faster_rcnn_obb import FasterRCNNOBB
+from .two_stage_rbbox import TwoStageDetectorRbbox
+from .RoITransformer import RoITransformer
+from .faster_rcnn_hbb_obb import FasterRCNNHBBOBB
+from .single_stage_rbbox import SingleStageDetectorRbbox
+from .retinanet_obb import RetinaNetRbbox
+
 __all__ = [
     'ATSS', 'BaseDetector', 'SingleStageDetector', 'TwoStageDetector', 'RPN',
     'FastRCNN', 'FasterRCNN', 'MaskRCNN', 'CascadeRCNN', 'HybridTaskCascade',
     'DoubleHeadRCNN', 'RetinaNet', 'FCOS', 'GridRCNN', 'MaskScoringRCNN',
-    'RepPointsDetector', 'FOVEA'
+    'RepPointsDetector', 'FOVEA',
+    'FasterRCNNOBB', 'TwoStageDetectorRbbox',
+    'RoITransformer', 'FasterRCNNHBBOBB',
+    'SingleStageDetectorRbbox', 'RetinaNetRbbox'
 ]
