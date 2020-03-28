@@ -116,3 +116,7 @@ work_dirs/
 
 # Pytorch
 *.pth
+
+# DOTA
+DOTA_devkit
+data
