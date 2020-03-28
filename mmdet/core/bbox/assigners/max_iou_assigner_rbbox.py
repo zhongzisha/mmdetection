@@ -6,7 +6,7 @@ from ..geometry import bbox_overlaps
 from ..geometry_rbbox import rbbox_overlaps_cy_warp
 
 
-class MaxIoUAssignerCy(BaseAssigner):
+class MaxIoUAssignerRbbox(BaseAssigner):
     """Assign a corresponding gt bbox or background to each bbox.
 
     Each proposals will be assigned with `-1`, `0`, or a positive integer
