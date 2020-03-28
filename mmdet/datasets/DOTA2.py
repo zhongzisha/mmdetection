@@ -2,7 +2,10 @@ import numpy as np
 from pycocotools.coco import COCO
 
 from .coco import CocoDataset
+from .registry import DATASETS
 
+
+@DATASETS.register_module
 class DOTA2Dataset(CocoDataset):
 
     CLASSES = ('plane', 'baseball-diamond',
@@ -84,6 +87,8 @@ class DOTA2Dataset(CocoDataset):
             ann['poly_lens'] = gt_poly_lens
         return ann
 
+
+@DATASETS.register_module
 class DOTA2Dataset_v2(CocoDataset):
 
     CLASSES = ('plane', 'baseball-diamond',
@@ -165,6 +170,8 @@ class DOTA2Dataset_v2(CocoDataset):
             ann['poly_lens'] = gt_poly_lens
         return ann
 
+
+@DATASETS.register_module
 class DOTA2Dataset_v3(CocoDataset):
 
     CLASSES = ('plane', 'baseball-diamond',
@@ -246,6 +253,8 @@ class DOTA2Dataset_v3(CocoDataset):
             ann['poly_lens'] = gt_poly_lens
         return ann
 
+
+@DATASETS.register_module
 class DOTA2Dataset_v4(CocoDataset):
     # same filter setting as DOTA1_5 v3
     CLASSES = ('plane', 'baseball-diamond',

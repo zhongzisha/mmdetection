@@ -7,6 +7,8 @@ from pycocotools.coco import maskUtils
 import cv2
 from functools import partial
 import copy
+from ..registry import PIPELINES
+
 
 def TuplePoly2Poly(poly):
     outpoly = [poly[0][0], poly[0][1],
@@ -65,6 +67,8 @@ def rotate_poly(h, w, new_h, new_w, rotate_matrix_T, polys):
 
     return rotated_polys
 
+
+@PIPELINES.register_module
 class RotateAugmentation(object):
     """
     1. rotate image and polygons, transfer polygons to masks
@@ -175,6 +179,8 @@ class RotateAugmentation(object):
 
         return rotated_img, rotated_boxes, rotated_masks, labels
 
+
+@PIPELINES.register_module
 class RotateTestAugmentation(object):
     """
     rotate image give a specific angle

@@ -3,8 +3,10 @@ import numpy as np
 from numpy import random
 
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
+from ..registry import PIPELINES
 
 
+@PIPELINES.register_module
 class PhotoMetricDistortion(object):
 
     def __init__(self,
@@ -64,6 +66,7 @@ class PhotoMetricDistortion(object):
         return img, boxes, labels
 
 
+@PIPELINES.register_module
 class Expand(object):
 
     def __init__(self, mean=(0, 0, 0), to_rgb=True, ratio_range=(1, 4)):
@@ -89,6 +92,7 @@ class Expand(object):
         return img, boxes, labels
 
 
+@PIPELINES.register_module
 class RandomCrop(object):
 
     def __init__(self, min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3):
@@ -141,6 +145,7 @@ class RandomCrop(object):
                 return img, boxes, labels
 
 
+@PIPELINES.register_module
 class ExtraAugmentation(object):
 
     def __init__(self,

@@ -1,6 +1,9 @@
 from .coco import CocoDataset
+from .registry import DATASETS
 import numpy as np
 
+
+@DATASETS.register_module
 class DOTADataset(CocoDataset):
 
     CLASSES = ('plane', 'baseball-diamond',
@@ -13,6 +16,7 @@ class DOTADataset(CocoDataset):
                 'helicopter')
 
 
+@DATASETS.register_module
 class DOTADataset_v3(CocoDataset):
 
     CLASSES = ('plane', 'baseball-diamond',
