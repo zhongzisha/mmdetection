@@ -2,8 +2,7 @@ from __future__ import division
 import sys, os
 
 import mmcv
-from mmdet.core import results2json, coco_eval, \
-    HBBSeg2Comp4, OBBDet2Comp4, OBBDetComp4, \
+from mmdet.core import HBBSeg2Comp4, OBBDet2Comp4, OBBDetComp4, \
     HBBOBB2Comp4, HBBDet2Comp4
 
 import argparse
