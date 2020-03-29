@@ -197,10 +197,12 @@ def OBBDetComp4(dataset, results):
 
 def HBBDet2Comp4(dataset, results):
     results_dict = {}
+    # print('len dataset', len(dataset))
     for idx in range(len(dataset)):
-        # print('idx: ', idx, 'total: ', len(dataset))
         filename = dataset.img_infos[idx]['filename']
         result = results[idx]
+        # print('idx: ', idx, 'total: ', len(dataset), filename)
+        # print(result)
         for label in range(len(result)):
             bboxes = result[label]
 

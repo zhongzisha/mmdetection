@@ -1,5 +1,5 @@
 import sys, os
-from mmdet.apis import init_detector, inference_detector, show_result, draw_poly_detections
+from mmdet.apis import init_detector, inference_detector, show_result
 import mmcv
 from mmcv import Config
 import cv2
@@ -7,7 +7,40 @@ import numpy as np
 from tqdm import tqdm
 import DOTA_devkit.polyiou as polyiou
 import math
-import pdb
+
+
+def py_cpu_nms(dets, thresh):
+    """Pure Python NMS baseline."""
+    #print('dets:', dets)
+    x1 = dets[:, 0]
+    y1 = dets[:, 1]
+    x2 = dets[:, 2]
+    y2 = dets[:, 3]
+    scores = dets[:, 4]
+
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    ## index for dets
+    order = scores.argsort()[::-1]
+
+
+    keep = []
+    while order.size > 0:
+        i = order[0]
+        keep.append(i)
+        xx1 = np.maximum(x1[i], x1[order[1:]])
+        yy1 = np.maximum(y1[i], y1[order[1:]])
+        xx2 = np.minimum(x2[i], x2[order[1:]])
+        yy2 = np.minimum(y2[i], y2[order[1:]])
+
+        w = np.maximum(0.0, xx2 - xx1 + 1)
+        h = np.maximum(0.0, yy2 - yy1 + 1)
+        inter = w * h
+        ovr = inter / (areas[i] + areas[order[1:]] - inter)
+
+        inds = np.where(ovr <= thresh)[0]
+        order = order[inds + 1]
+
+    return keep
 
 
 def py_cpu_nms_poly_fast_np(dets, thresh):
@@ -46,12 +79,6 @@ def py_cpu_nms_poly_fast_np(dets, thresh):
         for j in range(tmp_order.size):
             iou = polyiou.iou_poly(polys[i], polys[tmp_order[j]])
             hbb_ovr[h_inds[j]] = iou
-
-        try:
-            if math.isnan(ovr[0]):
-                pdb.set_trace()
-        except:
-            pass
         inds = np.where(hbb_ovr <= thresh)[0]
         order = order[inds + 1]
     return keep
@@ -65,7 +92,6 @@ class DetectorModel():
         self.config_file = config_file
         self.checkpoint_file = checkpoint_file
         self.cfg = Config.fromfile(self.config_file)
-        self.data_test = self.cfg.data['test']
         # for DOTA-1.0
         self.classnames = ('plane', 'baseball-diamond',
                            'bridge', 'ground-track-field',
@@ -83,7 +109,7 @@ class DetectorModel():
         hn, wn = chip_size
         # TODO: check the corner case
         # import pdb; pdb.set_trace()
-        total_detections = [np.zeros((0, 9)) for _ in range(len(self.classnames))]
+        total_detections = [np.zeros((0, 5)) for _ in range(len(self.classnames))]
 
         for i in tqdm(range(int(width / slide_w + 1))):
             for j in range(int(height / slide_h) + 1):
@@ -94,25 +120,31 @@ class DetectorModel():
 
                 chip_detections = inference_detector(self.model, subimg)
 
-                # print('result: ', result)
+                print('result: ', chip_detections)
                 for cls_id, name in enumerate(self.classnames):
-                    chip_detections[cls_id][:, :8][:, ::2] = chip_detections[cls_id][:, :8][:, ::2] + i * slide_w
-                    chip_detections[cls_id][:, :8][:, 1::2] = chip_detections[cls_id][:, :8][:, 1::2] + j * slide_h
-                    # import pdb;pdb.set_trace()
-                    try:
-                        total_detections[cls_id] = np.concatenate((total_detections[cls_id], chip_detections[cls_id]))
-                    except:
-                        import pdb; pdb.set_trace()
+                    chip_detections[cls_id][:, :4][:, ::2] = chip_detections[cls_id][:, :4][:, ::2] + i * slide_w
+                    chip_detections[cls_id][:, :4][:, 1::2] = chip_detections[cls_id][:, :4][:, 1::2] + j * slide_h
+
+                    total_detections[cls_id] = np.concatenate((total_detections[cls_id], chip_detections[cls_id]))
         # nms
         for i in range(len(self.classnames)):
-            keep = py_cpu_nms_poly_fast_np(total_detections[i], 0.1)
+            keep = py_cpu_nms(total_detections[i], 0.1)
             total_detections[i] = total_detections[i][keep]
         return total_detections
 
     def inference_single_vis(self, srcpath, dstpath, slide_size, chip_size):
         detections = self.inference_single(srcpath, slide_size, chip_size)
-        img = draw_poly_detections(srcpath, detections, self.classnames, scale=1, threshold=0.3)
-        cv2.imwrite(dstpath, img)
+        # img = draw_poly_detections(srcpath, detections, self.classnames, scale=1, threshold=0.3)
+        # cv2.imwrite(dstpath, img)
+
+        img = mmcv.imread(srcpath)
+        show_result(img,
+                    detections,
+                    self.classnames,
+                    score_thr=0.3,
+                    wait_time=0,
+                    show=False,
+                    out_file=dstpath)
 
 
 if __name__ == '__main__':

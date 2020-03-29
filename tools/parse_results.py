@@ -48,6 +48,7 @@ def OBB2HBB(srcpath, dstpath):
 
 def parse_results(config_file, resultfile, dstpath, type):
     cfg = Config.fromfile(config_file)
+    cfg.data.test.test_mode = True
 
     dataset = build_dataset(cfg.data.test)
     outputs = mmcv.load(resultfile)
@@ -68,8 +69,6 @@ def parse_results(config_file, resultfile, dstpath, type):
         # dota2, hbb has passed, obb has passed
         hbb_results_dict, obb_results_dict = HBBSeg2Comp4(dataset, outputs)
         current_thresh = 0.3
-
-    dataset_type = cfg.dataset_type
 
     if 'obb_results_dict' in vars():
         if not os.path.exists(os.path.join(dstpath, 'Task1_results')):
@@ -107,6 +106,7 @@ def parse_results(config_file, resultfile, dstpath, type):
             os.makedirs(os.path.join(dstpath, 'Task2_results_nms'))
         mergebyrec(os.path.join(dstpath, 'Task2_results'),
             os.path.join(dstpath, 'Task2_results_nms'))
+
 
 if __name__ == '__main__':
     args = parse_args()
