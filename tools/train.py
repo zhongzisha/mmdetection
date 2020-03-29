@@ -70,6 +70,7 @@ def main():
     cfg.gpus = args.gpus
 
     if args.autoscale_lr:
+        print('*'*50)
         # apply the linear scaling rule (https://arxiv.org/abs/1706.02677)
         cfg.optimizer['lr'] = cfg.optimizer['lr'] * cfg.gpus / 8
 
