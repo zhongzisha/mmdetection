@@ -5,6 +5,7 @@ from .. import builder
 from ..registry import DETECTORS
 from mmdet.core import bbox2result, dbbox2result
 
+
 # TODO: make it more flexible to add hbb
 @DETECTORS.register_module
 class SingleStageDetectorRbbox(BaseDetectorNew):
