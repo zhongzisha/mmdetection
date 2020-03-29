@@ -1,31 +1,20 @@
 from __future__ import division
 import sys, os
-import argparse
-import os.path as osp
-import shutil
-import tempfile
 
 import mmcv
-from mmdet.apis import init_dist
 from mmdet.core import results2json, coco_eval, \
     HBBSeg2Comp4, OBBDet2Comp4, OBBDetComp4, \
     HBBOBB2Comp4, HBBDet2Comp4
 
 import argparse
 
-from mmdet import __version__
 from mmdet.datasets import build_dataset
-from mmdet.apis import (train_detector, init_dist, get_root_logger,
-                        set_random_seed)
-from mmdet.models import build_detector
-import torch
-import json
 from mmcv import Config
-import sys
-# sys.path.insert(0, '../')
-# import DOTA_devkit.ResultMerge_multi_process as RM
-from DOTA_devkit.ResultMerge_multi_process import *
-# import pdb; pdb.set_trace()
+
+from DOTA_devkit.ResultMerge_multi_process import mergebypoly_multiprocess, mergebyrec
+from DOTA_devkit.dota_utils import GetFileFromThisRootDir
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('--config', default='configs/DOTA/faster_rcnn_r101_fpn_1x_dota2_v3_RoITrans_v5.py')
@@ -35,8 +24,9 @@ def parse_args():
 
     return args
 
+
 def OBB2HBB(srcpath, dstpath):
-    filenames = util.GetFileFromThisRootDir(srcpath)
+    filenames = GetFileFromThisRootDir(srcpath)
     if not os.path.exists(dstpath):
         os.makedirs(dstpath)
     for file in filenames:
@@ -55,6 +45,7 @@ def OBB2HBB(srcpath, dstpath):
                     if index != (len(splitlines) - 1):
                         outline = outline + '\n'
                     f_out.write(outline)
+
 
 def parse_results(config_file, resultfile, dstpath, type):
     cfg = Config.fromfile(config_file)
