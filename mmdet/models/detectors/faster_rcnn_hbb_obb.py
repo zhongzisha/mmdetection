@@ -85,7 +85,7 @@ class FasterRCNNHBBOBB(BaseDetectorNew, RPNTestMixin, BBoxTestMixin,
 
     def forward_train(self,
                       img,
-                      img_meta,
+                      img_metas,
                       gt_bboxes,
                       gt_labels,
                       gt_bboxes_ignore=None,
@@ -98,7 +98,7 @@ class FasterRCNNHBBOBB(BaseDetectorNew, RPNTestMixin, BBoxTestMixin,
         # RPN forward and loss
         if self.with_rpn:
             rpn_outs = self.rpn_head(x)
-            rpn_loss_inputs = rpn_outs + (gt_bboxes, img_meta,
+            rpn_loss_inputs = rpn_outs + (gt_bboxes, img_metas,
                                           self.train_cfg.rpn)
             rpn_losses = self.rpn_head.loss(
                 *rpn_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
@@ -106,7 +106,7 @@ class FasterRCNNHBBOBB(BaseDetectorNew, RPNTestMixin, BBoxTestMixin,
 
             proposal_cfg = self.train_cfg.get('rpn_proposal',
                                               self.test_cfg.rpn)
-            proposal_inputs = rpn_outs + (img_meta, proposal_cfg)
+            proposal_inputs = rpn_outs + (img_metas, proposal_cfg)
             proposal_list = self.rpn_head.get_bboxes(*proposal_inputs)
         else:
             proposal_list = proposals

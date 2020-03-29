@@ -55,7 +55,7 @@ class BaseDetectorNew(nn.Module):
         pass
 
     @abstractmethod
-    def simple_test(self, img, img_meta, **kwargs):
+    def simple_test(self, img, img_metas, **kwargs):
         pass
 
     @abstractmethod
@@ -87,14 +87,14 @@ class BaseDetectorNew(nn.Module):
         else:
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    def forward(self, img, img_meta, return_loss=True, **kwargs):
+    def forward(self, img, img_metas, return_loss=True, **kwargs):
         if return_loss:
             # print('in base detector new')
             # import pdb
             # pdb.set_trace()
-            return self.forward_train(img, img_meta, **kwargs)
+            return self.forward_train(img, img_metas, **kwargs)
         else:
-            return self.forward_test(img, img_meta, **kwargs)
+            return self.forward_test(img, img_metas, **kwargs)
 
     def show_result(self,
                     data,
