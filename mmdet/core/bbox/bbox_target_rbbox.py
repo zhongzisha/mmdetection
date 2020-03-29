@@ -77,6 +77,8 @@ def bbox_target_rbbox_single(pos_bboxes,
     bbox_weights = pos_bboxes.new_zeros(num_samples, 5)
 
     if num_pos > 0:
+        print('gt_masks', gt_masks.shape)
+        print('pos_assigned_gt_inds', pos_assigned_gt_inds)
         pos_gt_masks = gt_masks[pos_assigned_gt_inds.cpu().numpy()]
         # TODO: optimizer it
         pos_gt_polys = mask2poly(pos_gt_masks)
