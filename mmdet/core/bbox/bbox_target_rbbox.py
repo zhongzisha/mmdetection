@@ -75,33 +75,34 @@ def bbox_target_rbbox_single(pos_bboxes,
     label_weights = pos_bboxes.new_zeros(num_samples)
     bbox_targets = pos_bboxes.new_zeros(num_samples, 5)
     bbox_weights = pos_bboxes.new_zeros(num_samples, 5)
-    pos_gt_masks = gt_masks[pos_assigned_gt_inds.cpu().numpy()]
-    # TODO: optimizer it
-    pos_gt_polys = mask2poly(pos_gt_masks)
-    # if len(pos_gt_polys) == 0:
-    #     import pdb
-    #     pdb.set_trace()
-    # print('pos_gt_polys: ', pos_gt_polys)
-    pos_gt_bp_polys = get_best_begin_point(pos_gt_polys)
-    # print('pos_gt_bp_polys: ', pos_gt_bp_polys)
-    # TODO optimizer it
-    # import pdb
-    # pdb.set_trace()
-    pos_gt_obbs = torch.from_numpy(polygonToRotRectangle_batch(pos_gt_bp_polys, with_module)).to(pos_bboxes.device)
-    # print('pos_gt_obbs: ', pos_gt_obbs)
-    if pos_bboxes.size(1) == 4:
-        # if hbb_trans == 'hbb2obb':
-        #     pos_ext_bboxes = hbb2obb(pos_bboxes)
-        # elif hbb_trans == 'hbbpolyobb':
-        #     pos_ext_bboxes = hbbpolyobb(pos_bboxes)
-        # elif hbb_trans == 'hbb2obb_v2':
-        pos_ext_bboxes = hbb2obb_v2(pos_bboxes)
-        # else:
-        #     print('no such hbb trans method')
-        #     raise Exception
-    else:
-        pos_ext_bboxes = pos_bboxes
+
     if num_pos > 0:
+        pos_gt_masks = gt_masks[pos_assigned_gt_inds.cpu().numpy()]
+        # TODO: optimizer it
+        pos_gt_polys = mask2poly(pos_gt_masks)
+        # if len(pos_gt_polys) == 0:
+        #     import pdb
+        #     pdb.set_trace()
+        # print('pos_gt_polys: ', pos_gt_polys)
+        pos_gt_bp_polys = get_best_begin_point(pos_gt_polys)
+        # print('pos_gt_bp_polys: ', pos_gt_bp_polys)
+        # TODO optimizer it
+        # import pdb
+        # pdb.set_trace()
+        pos_gt_obbs = torch.from_numpy(polygonToRotRectangle_batch(pos_gt_bp_polys, with_module)).to(pos_bboxes.device)
+        # print('pos_gt_obbs: ', pos_gt_obbs)
+        if pos_bboxes.size(1) == 4:
+            # if hbb_trans == 'hbb2obb':
+            #     pos_ext_bboxes = hbb2obb(pos_bboxes)
+            # elif hbb_trans == 'hbbpolyobb':
+            #     pos_ext_bboxes = hbbpolyobb(pos_bboxes)
+            # elif hbb_trans == 'hbb2obb_v2':
+            pos_ext_bboxes = hbb2obb_v2(pos_bboxes)
+            # else:
+            #     print('no such hbb trans method')
+            #     raise Exception
+        else:
+            pos_ext_bboxes = pos_bboxes
         labels[:num_pos] = pos_gt_labels
         pos_weight = 1.0 if cfg.pos_weight <= 0 else cfg.pos_weight
         label_weights[:num_pos] = pos_weight

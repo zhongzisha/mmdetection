@@ -17,6 +17,8 @@ from mmdet.core import (bbox_mapping, merge_aug_proposals, merge_aug_bboxes,
                         merge_rotate_aug_bboxes, multiclass_nms_rbbox)
 import copy
 from mmdet.core import RotBox2Polys, polygonToRotRectangle_batch
+
+
 @DETECTORS.register_module
 class RoITransformer(BaseDetectorNew, RPNTestMixin):
 

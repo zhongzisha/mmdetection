@@ -148,7 +148,6 @@ class FasterRCNNHBBOBB(BaseDetectorNew, RPNTestMixin, BBoxTestMixin,
                                             *bbox_targets)
             losses.update(loss_bbox)
 
-
         # bbox head forward and loss
         if self.with_rbbox:
             rois = bbox2roi([res.bboxes for res in sampling_results])

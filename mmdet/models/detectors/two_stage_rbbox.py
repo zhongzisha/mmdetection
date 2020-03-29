@@ -10,8 +10,7 @@ from mmdet.core import bbox2roi, bbox2result, build_assigner, build_sampler, dbb
 
 
 @DETECTORS.register_module
-class TwoStageDetectorRbbox(BaseDetector, RPNTestMixin, BBoxTestMixin,
-                       MaskTestMixin):
+class TwoStageDetectorRbbox(BaseDetector, RPNTestMixin, BBoxTestMixin, MaskTestMixin):
 
     def __init__(self,
                  backbone,

@@ -232,7 +232,6 @@ def dbbox2delta_v2(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1])
     dist = dist / (np.pi / 2.)
     deltas = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh, dist), -1)
 
-
     means = deltas.new_tensor(means).unsqueeze(0)
     stds = deltas.new_tensor(stds).unsqueeze(0)
     deltas = deltas.sub_(means).div_(stds)
@@ -535,11 +534,12 @@ def dbbox2delta_warp(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1
 
 
 def TuplePoly2Poly(poly):
-    outpoly = [poly[0][0], poly[0][1],
-                       poly[1][0], poly[1][1],
-                       poly[2][0], poly[2][1],
-                       poly[3][0], poly[3][1]
-                       ]
+    outpoly = [
+        poly[0][0], poly[0][1],
+        poly[1][0], poly[1][1],
+        poly[2][0], poly[2][1],
+        poly[3][0], poly[3][1]
+    ]
     return outpoly
 
 
@@ -638,17 +638,17 @@ def get_best_begin_point_single(coordinate):
     force = 100000000.0
     force_flag = 0
     for i in range(4):
-        temp_force = cal_line_length(combinate[i][0], dst_coordinate[0]) + cal_line_length(combinate[i][1],
-                                                                                           dst_coordinate[
-                                                                                               1]) + cal_line_length(
-            combinate[i][2], dst_coordinate[2]) + cal_line_length(combinate[i][3], dst_coordinate[3])
+        temp_force = cal_line_length(combinate[i][0], dst_coordinate[0]) + \
+                     cal_line_length(combinate[i][1], dst_coordinate[1]) + \
+                     cal_line_length(combinate[i][2], dst_coordinate[2]) + \
+                     cal_line_length(combinate[i][3], dst_coordinate[3])
         if temp_force < force:
             force = temp_force
             force_flag = i
     if force_flag != 0:
         pass
         # print("choose one direction!")
-    return  combinate[force_flag]
+    return combinate[force_flag]
 
 
 def get_best_begin_point_warp_single(coordinate):
@@ -682,7 +682,6 @@ def xy2wh(boxes):
     :return: out_boxes: (x_ctr, y_ctr, w, h) (n, 4)
     """
     num_boxes = boxes.size(0)
-
     ex_widths = boxes[..., 2] - boxes[..., 0] + 1.0
     ex_heights = boxes[..., 3] - boxes[..., 1] + 1.0
     ex_ctr_x = boxes[..., 0] + 0.5 * (ex_widths - 1.0)
@@ -693,7 +692,6 @@ def xy2wh(boxes):
 
 def xy2wh_c(boxes):
     """
-
     :param boxes: (xmin, ymin, xmax, ymax) (n, 4 * #C)
     :return: out_boxes: (x_ctr, y_ctr, w, h) (n, 4 * #C)
     """
@@ -718,7 +716,6 @@ def wh2xy(bboxes):
     :return: out_bboxes: (xmin, ymin, xmax, ymax) (n, 4)
     """
     num_boxes = bboxes.size(0)
-
     xmins = bboxes[..., 0] - (bboxes[..., 2] - 1) / 2.0
     ymins = bboxes[..., 1] - (bboxes[..., 3] - 1) / 2.0
     xmaxs = bboxes[..., 0] + (bboxes[..., 2] - 1) / 2.0
@@ -772,7 +769,10 @@ def hbb2obb_v2(boxes):
     ex_widths = boxes[..., 3] - boxes[..., 1] + 1.0
     ex_ctr_x = boxes[..., 0] + 0.5 * (ex_heights - 1.0)
     ex_ctr_y = boxes[..., 1] + 0.5 * (ex_widths - 1.0)
-    c_bboxes = torch.cat((ex_ctr_x.unsqueeze(1), ex_ctr_y.unsqueeze(1), ex_widths.unsqueeze(1), ex_heights.unsqueeze(1)), 1)
+    c_bboxes = torch.cat((ex_ctr_x.unsqueeze(1),
+                          ex_ctr_y.unsqueeze(1),
+                          ex_widths.unsqueeze(1),
+                          ex_heights.unsqueeze(1)), 1)
     initial_angles = -c_bboxes.new_ones((num_boxes, 1)) * np.pi / 2
     # initial_angles = -torch.ones((num_boxes, 1)) * np.pi/2
     dbboxes = torch.cat((c_bboxes, initial_angles), 1)
@@ -859,7 +859,7 @@ def RotBox2Polys(dboxes):
     w = dboxes[:, 2] - 1
     h = dboxes[:, 3] - 1
 
-    ## change the order to be the initial definition
+    # change the order to be the initial definition
     x_ctr = dboxes[:, 0]
     y_ctr = dboxes[:, 1]
     x1 = x_ctr + cs * (w / 2.0) - ss * (-h / 2.0)
@@ -887,9 +887,8 @@ def RotBox2Polys(dboxes):
 
 def RotBox2Polys_torch(dboxes):
     """
-
-    :param dboxes:
-    :return:
+    :param dboxes: (numboxes, 5), (x_ctr, y_ctr, w, h, angle)
+    :return: (numboxes, 8),xyxyxyxy
     """
     cs = torch.cos(dboxes[:, 4])
     ss = torch.sin(dboxes[:, 4])
