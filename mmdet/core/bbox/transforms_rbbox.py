@@ -577,18 +577,26 @@ def mask2poly_single(binary_mask):
     :param binary_mask:
     :return:
     """
-    try:
-        contours, hierarchy = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        # contour_lens = np.array(list(map(len, contours)))
-        # max_id = contour_lens.argmax()
-        # max_contour = contours[max_id]
-        max_contour = max(contours, key=len)
-        rect = cv2.minAreaRect(max_contour)
-        poly = cv2.boxPoints(rect)
-        # poly = TuplePoly2Poly(poly)
-    except:
-        import pdb
-        pdb.set_trace()
+    # try:
+    #     contours, hierarchy = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    #     # contour_lens = np.array(list(map(len, contours)))
+    #     # max_id = contour_lens.argmax()
+    #     # max_contour = contours[max_id]
+    #     max_contour = max(contours, key=len)
+    #     rect = cv2.minAreaRect(max_contour)
+    #     poly = cv2.boxPoints(rect)
+    #     # poly = TuplePoly2Poly(poly)
+    # except:
+    #     import pdb
+    #     pdb.set_trace()
+    contours, hierarchy = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    # contour_lens = np.array(list(map(len, contours)))
+    # max_id = contour_lens.argmax()
+    # max_contour = contours[max_id]
+    max_contour = max(contours, key=len)
+    rect = cv2.minAreaRect(max_contour)
+    poly = cv2.boxPoints(rect)
+    # poly = TuplePoly2Poly(poly)
     return poly
 
 
