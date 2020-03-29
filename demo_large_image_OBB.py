@@ -109,7 +109,7 @@ class DetectorModel():
         hn, wn = chip_size
         # TODO: check the corner case
         # import pdb; pdb.set_trace()
-        total_detections = [np.zeros((0, 8)) for _ in range(len(self.classnames))]
+        total_detections = [np.zeros((0, 9)) for _ in range(len(self.classnames))]
 
         for i in tqdm(range(int(width / slide_w + 1))):
             for j in range(int(height / slide_h) + 1):
