@@ -589,6 +589,7 @@ def mask2poly_single(binary_mask):
     # except:
     #     import pdb
     #     pdb.set_trace()
+    print(binary_mask.shape, type(binary_mask))
     contours, hierarchy = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     # contour_lens = np.array(list(map(len, contours)))
     # max_id = contour_lens.argmax()
