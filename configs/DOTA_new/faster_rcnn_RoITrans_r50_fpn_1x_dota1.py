@@ -132,8 +132,6 @@ test_cfg = dict(
         nms_thr=0.7,
         min_bbox_size=0),
     rcnn=dict(
-        score_thr=0.05, nms=dict(type='nms', iou_thr=0.1), max_per_img=2000),
-    rrcnn=dict(
         # score_thr=0.0001, nms=dict(type='py_cpu_nms_poly_fast', iou_thr=0.9), max_per_img=1000)
         # score_thr=0.0001, nms = dict(type='py_cpu_nms_poly_fast', iou_thr=0.9), max_per_img=2000)
         score_thr = 0.05, nms = dict(type='py_cpu_nms_poly_fast', iou_thr=0.1), max_per_img = 2000)
@@ -172,7 +170,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=2,
+    imgs_per_gpu=4,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
@@ -186,8 +184,8 @@ data = dict(
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'test1024/DOTA_test1024.json',
-        img_prefix=data_root + 'test1024/images',
+        ann_file=data_root + 'val1024/DOTA_val1024.json',
+        img_prefix=data_root + 'val1024/images',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 # optimizer
