@@ -161,7 +161,7 @@ class RBBoxTestMixin(object):
 
     def simple_test_rbboxes(self,
                             x,
-                            img_meta,
+                            img_metas,
                             proposals,
                             rcnn_test_cfg,
                             rescale=False):
@@ -172,8 +172,8 @@ class RBBoxTestMixin(object):
         if self.with_shared_head:
             roi_feats = self.shared_head(roi_feats)
         cls_score, bbox_pred = self.rbbox_head(roi_feats)
-        img_shape = img_meta[0]['img_shape']
-        scale_factor = img_meta[0]['scale_factor']
+        img_shape = img_metas[0]['img_shape']
+        scale_factor = img_metas[0]['scale_factor']
         det_rbboxes, det_labels = self.rbbox_head.get_det_bboxes(
             rois,
             cls_score,
@@ -186,13 +186,13 @@ class RBBoxTestMixin(object):
 
     def simple_test_rbboxes_v2(self,
                                x,
-                               img_meta,
+                               img_metas,
                                det_bboxes,
                                rcnn_test_cfg,
                                rescale=False):
         # image shape of the first image in the batch (only one)
-        ori_shape = img_meta[0]['ori_shape']
-        scale_factor = img_meta[0]['scale_factor']
+        ori_shape = img_metas[0]['ori_shape']
+        scale_factor = img_metas[0]['scale_factor']
         if det_bboxes.shape[0] == 0:
             det_rbboxes = det_bboxes.new_zeros((0, 6))
             det_labels = det_bboxes.new_zeros((0, ), dtype=torch.long)
@@ -205,8 +205,8 @@ class RBBoxTestMixin(object):
             if self.with_shared_head:
                 rbbox_feats = self.shared_head(rbbox_feats)
             cls_score, rbbox_pred = self.rbbox_head(rbbox_feats)
-            img_shape = img_meta[0]['img_shape']
-            scale_factor = img_meta[0]['scale_factor']
+            img_shape = img_metas[0]['img_shape']
+            scale_factor = img_metas[0]['scale_factor']
             det_rbboxes, det_labels = self.rbbox_head.get_det_bboxes(
                 rbbox_rois,
                 cls_score,

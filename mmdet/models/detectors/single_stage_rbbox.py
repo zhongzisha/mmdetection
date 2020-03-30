@@ -102,11 +102,11 @@ class SingleStageDetectorRbbox(BaseDetectorNew):
     #         ]
     #         return bbox_results[0], rbbox_results[0]
 
-    def simple_test(self, img, img_meta, rescale=False):
+    def simple_test(self, img, img_metas, rescale=False):
         # TODO: make if more flexible to add hbb and obb
         x = self.extract_feat(img)
         rbbox_outs = self.rbbox_head(x)
-        rbbox_inputs = rbbox_outs + (img_meta, self.test_cfg, rescale)
+        rbbox_inputs = rbbox_outs + (img_metas, self.test_cfg, rescale)
         rbbox_list =self.rbbox_head.get_bboxes(*rbbox_inputs)
         rbbox_results = [
             dbbox2result(det_rbboxes, det_labels, self.rbbox_head.num_classes)
