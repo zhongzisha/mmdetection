@@ -96,7 +96,7 @@ class MaxIoUAssignerRbbox(BaseAssigner):
             if gt_labels is not None:
                 gt_labels = gt_labels.cpu()
 
-        bboxes = bboxes[:, :4]
+        # bboxes = bboxes[:, :4]
         overlaps = rbbox_overlaps_cy_warp(gt_bboxes, bboxes)
 
         if (self.ignore_iof_thr > 0 and gt_bboxes_ignore is not None
