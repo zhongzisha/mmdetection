@@ -108,7 +108,7 @@ def main():
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
     cfg.model.pretrained = None
-    cfg.data.test.test_mode = True
+    # cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
@@ -120,10 +120,13 @@ def main():
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
     if args.testset == 'train':
+        cfg.data.train.test_mode = True
         dataset = build_dataset(cfg.data.train)
     elif args.testset == 'val':
+        cfg.data.val.test_mode = True
         dataset = build_dataset(cfg.data.val)
     elif args.testset == 'test':
+        cfg.data.test.test_mode = True
         dataset = build_dataset(cfg.data.test)
     else:
         raise ValueError('testset must in [train, val, test].')
