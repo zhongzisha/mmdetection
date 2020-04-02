@@ -99,8 +99,8 @@ data = dict(
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'val1024/DOTA_val1024.json',
-        img_prefix=data_root + 'val1024/images',
+        ann_file=data_root + 'test1024/DOTA_test1024.json',
+        img_prefix=data_root + 'test1024/images',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 # optimizer

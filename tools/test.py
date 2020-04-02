@@ -77,6 +77,11 @@ def parse_args():
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
         help='job launcher')
+    parser.add_argument(
+        '--testset',
+        choices=['train', 'val', 'test'],
+        default='test',
+        help='which subset is to be test')
     parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
@@ -114,7 +119,14 @@ def main():
 
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
-    dataset = build_dataset(cfg.data.test)
+    if args.testset == 'train':
+        dataset = build_dataset(cfg.data.train)
+    elif args.testset == 'val':
+        dataset = build_dataset(cfg.data.val)
+    elif args.testset == 'test':
+        dataset = build_dataset(cfg.data.test)
+    else:
+        raise ValueError('testset must in [train, val, test].')
     data_loader = build_dataloader(
         dataset,
         imgs_per_gpu=1,
