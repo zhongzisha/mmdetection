@@ -50,7 +50,7 @@ def parse_args():
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file in pickle format')
     parser.add_argument(
-        '--testset',
+        '--subset',
         choices=['train', 'val', 'test'],
         default='test',
         help='which subset is to be test')
@@ -119,13 +119,13 @@ def main():
 
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
-    if args.testset == 'train':
+    if args.subset == 'train':
         cfg.data.train.test_mode = True
         dataset = build_dataset(cfg.data.train)
-    elif args.testset == 'val':
+    elif args.subset == 'val':
         cfg.data.val.test_mode = True
         dataset = build_dataset(cfg.data.val)
-    elif args.testset == 'test':
+    elif args.subset == 'test':
         cfg.data.test.test_mode = True
         dataset = build_dataset(cfg.data.test)
     else:

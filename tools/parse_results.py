@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('--config', default='configs/DOTA/faster_rcnn_r101_fpn_1x_dota2_v3_RoITrans_v5.py')
     parser.add_argument('--type', default=r'HBB', help='parse type of detector')
     parser.add_argument(
-        '--testset',
+        '--subset',
         choices=['train', 'val', 'test'],
         default='test',
         help='which subset is to be test')
@@ -53,13 +53,13 @@ def OBB2HBB(srcpath, dstpath):
 def parse_results(config_file, resultfile, dstpath, type):
     cfg = Config.fromfile(config_file)
 
-    if args.testset == 'train':
+    if args.subset == 'train':
         cfg.data.train.test_mode = True
         dataset = build_dataset(cfg.data.train)
-    elif args.testset == 'val':
+    elif args.subset == 'val':
         cfg.data.val.test_mode = True
         dataset = build_dataset(cfg.data.val)
-    elif args.testset == 'test':
+    elif args.subset == 'test':
         cfg.data.test.test_mode = True
         dataset = build_dataset(cfg.data.test)
     else:
