@@ -17,8 +17,12 @@ from DOTA_devkit.dota_utils import GetFileFromThisRootDir
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('--config', default='configs/DOTA/faster_rcnn_r101_fpn_1x_dota2_v3_RoITrans_v5.py')
-    parser.add_argument('--type', default=r'HBB',
-                        help='parse type of detector')
+    parser.add_argument('--type', default=r'HBB', help='parse type of detector')
+    parser.add_argument(
+        '--testset',
+        choices=['train', 'val', 'test'],
+        default='test',
+        help='which subset is to be test')
     args = parser.parse_args()
 
     return args
@@ -48,9 +52,19 @@ def OBB2HBB(srcpath, dstpath):
 
 def parse_results(config_file, resultfile, dstpath, type):
     cfg = Config.fromfile(config_file)
-    cfg.data.test.test_mode = True
 
-    dataset = build_dataset(cfg.data.test)
+    if args.testset == 'train':
+        cfg.data.train.test_mode = True
+        dataset = build_dataset(cfg.data.train)
+    elif args.testset == 'val':
+        cfg.data.val.test_mode = True
+        dataset = build_dataset(cfg.data.val)
+    elif args.testset == 'test':
+        cfg.data.test.test_mode = True
+        dataset = build_dataset(cfg.data.test)
+    else:
+        raise ValueError('testset must in [train, val, test].')
+
     outputs = mmcv.load(resultfile)
     if type == 'OBB':
         #  dota1 has tested
@@ -91,7 +105,7 @@ def parse_results(config_file, resultfile, dstpath, type):
                                  o_thresh=current_thresh)
 
         OBB2HBB(os.path.join(dstpath, 'Task1_results_nms'),
-                         os.path.join(dstpath, 'Transed_Task2_results_nms'))
+                os.path.join(dstpath, 'Transed_Task2_results_nms'))
 
     if 'hbb_results_dict' in vars():
         if not os.path.exists(os.path.join(dstpath, 'Task2_results')):
