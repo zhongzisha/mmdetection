@@ -127,7 +127,7 @@ log_config = dict(
 total_epochs = 24  # 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/retinanet_obb_r50_fpn_2x_dota1'
+work_dir = './work_dirs/retinanet_obb_r50_fpn_2x_dota1_lr0.005'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
