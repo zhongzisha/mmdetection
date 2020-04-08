@@ -594,7 +594,6 @@ def mask2poly_single(binary_mask):
 
 def mask2poly(binary_mask_list):
     polys = map(mask2poly_single, binary_mask_list)
-    # polys = np.stack(polys
     return list(polys)
 
 

@@ -1,7 +1,7 @@
 import torch
 
 from .transforms_rbbox import dbbox2delta, delta2dbbox, \
-    mask2poly, get_best_begin_point, polygonToRotRectangle_batch\
+    mask2poly, get_best_begin_point, polygonToRotRectangle_batch \
     , best_match_dbbox2delta, delta2dbbox_v3, dbbox2delta_v3, hbb2obb_v2
 from ..utils import multi_apply
 
