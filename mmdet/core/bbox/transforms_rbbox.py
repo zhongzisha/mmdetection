@@ -779,6 +779,27 @@ def hbb2obb_v2(boxes):
     return dbboxes
 
 
+def hbb2obb_v3(boxes):
+    """
+    fix a bug
+    :param boxes: shape (n, 4) (xmin, ymin, xmax, ymax)
+    :return: dbboxes: shape (n, 5) (x_ctr, y_ctr, w, h, angle)
+    """
+    num_boxes = boxes.size(0)
+    ex_heights = boxes[..., 2] - boxes[..., 0] + 1.0
+    ex_widths = boxes[..., 3] - boxes[..., 1] + 1.0
+    ex_ctr_x = boxes[..., 0] + 0.5 * (ex_heights - 1.0)
+    ex_ctr_y = boxes[..., 1] + 0.5 * (ex_widths - 1.0)
+    c_bboxes = torch.cat((ex_ctr_x.unsqueeze(1),
+                          ex_ctr_y.unsqueeze(1),
+                          ex_widths.unsqueeze(1),
+                          ex_heights.unsqueeze(1)), 1)
+    initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi / 2  # 90 degree in default
+    dbboxes = torch.cat((c_bboxes, initial_angles), 1)
+
+    return dbboxes
+
+
 def roi2droi(rois):
     """
     :param rois: Tensor: shape (n, 5), [batch_ind, x1, y1, x2, y2]
