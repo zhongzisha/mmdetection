@@ -113,5 +113,29 @@ class test_op_roi_align_rotated(unittest.TestCase):
         test = gradcheck(RoIAlignRotated(4, spatial_scale, 2), inputs, atol=1e-3, eps=1e-3)
         print(test)
 
+    def test_roi_align_rotated_360_autograd(self):
+        # x1 = np.random.rand(4, 1, 12, 12).astype('float64')
+        # x2_t = np.array([[0, 6.2, 6.3, 4.2, 4.4, np.pi / 4.], [2, 4.1, 4.2, 6.2, 6.0, -np.pi],
+        #                  [1, 6.0, 6.3, 4.0, 4.1, 3 * np.pi / 4.]], dtype='float64')
+        # polys2_t = RotBox2Polys(x2_t[:, 1:])
+        x2 = np.array([[0, 6.2, 6.0, 4.0, 4.0, 0.],
+                       [0, 6.3, 6.0, 4.0, 4.0, np.pi / 4.],
+                       [0, 6.0, 6.0, 4.0, 4.0, np.pi / 2.],
+                       [0, 6.0, 6.0, 4.3, 4.0, np.pi],
+                       [1, 6.0, 6.0, 4.0, 4.0, np.pi / 3.],
+                       [2, 4.1, 4.2, 6.2, 6.0, 1.5 * np.pi],
+                       [1, 6.0, 6.3, 4.0, 4.1, 1.7 * np.pi],
+                       [0, 6.2, 6.3, 4.2, 4.4, 2 * np.pi ]
+                       ], dtype='float64')
+        x1 = torch.rand(4, 1, 12, 12, requires_grad=True, device='cuda:0')
+        x2 = torch.from_numpy(x2).float().cuda()
+        inputs = (x1, x2)
+        print('Gradcheck for roi align rotated 360...')
+        spatial_scale = 1
+        test = gradcheck(RoIAlignRotated(4, spatial_scale), inputs, atol=1e-3, eps=1e-3)
+        print(test)
+        test = gradcheck(RoIAlignRotated(4, spatial_scale, 2), inputs, atol=1e-3, eps=1e-3)
+        print(test)
+
 if __name__ == '__main__':
     unittest.main()
