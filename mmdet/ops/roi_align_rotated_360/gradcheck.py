@@ -8,7 +8,7 @@ import os.path as osp
 import sys
 sys.path.append(osp.abspath(osp.join(__file__, '../../')))
 from roi_align_rotated import RoIAlignRotated  # noqa: E402
-from mmdet.core.evaluation import RotBox2Polys
+from mmdet.core.bbox.transforms_rbbox import RotBox2Polys
 import unittest
 
 

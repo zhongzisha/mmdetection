@@ -86,7 +86,6 @@ __global__ void ROIAlignRotatedForward(const int nthreads, const scalar_t *botto
     // scalar_t theta = offset_bottom_rois[5] * M_PI / 180.0;
     scalar_t angle = offset_bottom_rois[5];
 
-    static const float M_PI = acos(-1.0);
     scalar_t degrees = angle * (180. / M_PI);
     scalar_t theta;
     if(degrees<=90)
@@ -243,7 +242,6 @@ __global__ void ROIAlignBackward(
     // scalar_t theta = offset_bottom_rois[5] * M_PI / 180.0;
     scalar_t angle = offset_bottom_rois[5];
 
-    static const float M_PI = acos(-1.0);
     scalar_t degrees = angle * (180. / M_PI);
     scalar_t theta;
     if(degrees<=90)
