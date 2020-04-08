@@ -145,6 +145,7 @@ class TwoStageDetectorRbbox(BaseDetector, RPNTestMixin, BBoxTestMixin, MaskTestM
             if self.with_shared_head:
                 bbox_feats = self.shared_head(bbox_feats)
             cls_score, bbox_pred = self.bbox_head(bbox_feats)
+
             # bbox_targets = self.bbox_head.get_target(
             #     sampling_results, gt_bboxes, gt_labels, self.train_cfg.rcnn)
             # loss_bbox = self.bbox_head.loss(cls_score, bbox_pred,

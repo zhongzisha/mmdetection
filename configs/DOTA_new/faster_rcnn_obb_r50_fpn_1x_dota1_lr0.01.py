@@ -32,19 +32,6 @@ model = dict(
         roi_layer=dict(type='RoIAlign', out_size=7, sample_num=2),
         out_channels=256,
         featmap_strides=[4, 8, 16, 32]),
-    # bbox_head=dict(
-    #     type='SharedFCBBoxHead',
-    #     num_fcs=2,
-    #     in_channels=256,
-    #     fc_out_channels=1024,
-    #     roi_feat_size=7,
-    #     num_classes=16,
-    #     target_means=[0., 0., 0., 0.],
-    #     target_stds=[0.1, 0.1, 0.2, 0.2],
-    #     reg_class_agnostic=False,
-    #     loss_cls=dict(
-    #         type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-    #     loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)))
     bbox_head=dict(
         type='SharedFCBBoxHeadRbbox',
         num_fcs=2,
@@ -145,7 +132,7 @@ test_pipeline = [
 ]
 data = dict(
     imgs_per_gpu=4,
-    workers_per_gpu=1,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
         ann_file=data_root + 'train1024/DOTA_train1024.json',
