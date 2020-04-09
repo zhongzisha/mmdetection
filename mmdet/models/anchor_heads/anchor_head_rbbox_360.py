@@ -6,7 +6,7 @@ import torch.nn as nn
 from mmcv.cnn import normal_init
 
 from mmdet.core import (AnchorGenerator, anchor_target_rbbox_360, delta2bbox,
-                        delta2dbbox, delta2dbbox_v3, multi_apply, multiclass_nms,
+                        delta2dbbox_360, delta2dbbox_v3, multi_apply, multiclass_nms,
                         multiclass_nms_rbbox)
 from mmdet.core.bbox.transforms_rbbox import hbb2obb_v2_360
 from ..builder import build_loss
@@ -264,7 +264,7 @@ class AnchorHeadRbbox_360(nn.Module):
 
             rbbox_ex_anchors = hbb2obb_v2_360(anchors)
             if self.with_module:
-                bboxes = delta2dbbox(rbbox_ex_anchors, bbox_pred, self.target_means,
+                bboxes = delta2dbbox_360(rbbox_ex_anchors, bbox_pred, self.target_means,
                                      self.target_stds, img_shape)
             else:
                 bboxes = delta2dbbox_v3(rbbox_ex_anchors, bbox_pred, self.target_means,

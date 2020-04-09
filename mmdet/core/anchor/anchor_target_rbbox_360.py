@@ -1,7 +1,7 @@
 import torch
 
 from ..bbox import assign_and_sample, build_assigner, \
-    PseudoSampler, bbox2delta, dbbox2delta, dbbox2delta_v3, hbb2obb_v2_360
+    PseudoSampler, bbox2delta, dbbox2delta_360, dbbox2delta_v3, hbb2obb_v2_360
 from ..utils import multi_apply
 from mmdet.core.bbox.transforms_rbbox import gt_mask_bp_obbs_360
 
@@ -174,7 +174,7 @@ def anchor_target_rbbox_360_single(flat_anchors,
         #     raise Exception
         pos_ext_bboxes = hbb2obb_v2_360(sampling_result.pos_bboxes)
         if with_module:
-            pos_bbox_targets = dbbox2delta(pos_ext_bboxes,
+            pos_bbox_targets = dbbox2delta_360(pos_ext_bboxes,
                                            pos_gt_obbs_ts,
                                            target_means, target_stds)
         else:

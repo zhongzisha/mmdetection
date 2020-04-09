@@ -44,7 +44,105 @@ def dbbox2delta(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
     return deltas
 
 
+
+# TODO: check the angle and module operation
+def dbbox2delta_360(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
+    """
+    :param proposals: (x_ctr, y_ctr, w, h, angle)
+            shape (n, 5)
+    :param gt: (x_ctr, y_ctr, w, h, angle)
+    :param means:
+    :param stds:
+    :return: encoded targets: shape (n, 5)
+    """
+    proposals = proposals.float()
+    gt = gt.float()
+    gt_widths = gt[..., 2]
+    gt_heights = gt[..., 3]
+    gt_angle = gt[..., 4]
+
+    proposals_widths = proposals[..., 2]
+    proposals_heights = proposals[..., 3]
+    proposals_angle = proposals[..., 4]
+
+    proposals_widths += 1e-8
+    proposals_heights += 1e-8
+
+    coord = gt[..., 0:2] - proposals[..., 0:2]
+    # dx = (torch.cos(proposals[..., 4]) * coord[..., 0] +
+    #       torch.sin(proposals[..., 4]) * coord[..., 1]) / proposals_widths
+    # dy = (-torch.sin(proposals[..., 4]) * coord[..., 0] +
+    #       torch.cos(proposals[..., 4]) * coord[..., 1]) / proposals_heights
+    dx = coord[..., 0] / (proposals[..., 0] + 1e-8)
+    dy = coord[..., 1] / (proposals[..., 1] + 1e-8)
+    dw = torch.log(gt_widths / proposals_widths)
+    dh = torch.log(gt_heights / proposals_heights)
+    dangle = (gt_angle - proposals_angle) # % (2 * math.pi) / (2 * math.pi)
+    deltas = torch.stack((dx, dy, dw, dh, dangle), -1)
+
+    means = deltas.new_tensor(means).unsqueeze(0)
+    stds = deltas.new_tensor(stds).unsqueeze(0)
+    deltas = deltas.sub_(means).div_(stds)
+
+    # TODO: expand bbox regression
+    return deltas
+
+
 def delta2dbbox(Rrois,
+                deltas,
+                means=[0, 0, 0, 0, 0],
+                stds=[1, 1, 1, 1, 1],
+                max_shape=None,
+                wh_ratio_clip=16 / 1000):
+    """
+
+    :param Rrois: (cx, cy, w, h, theta)
+    :param deltas: (dx, dy, dw, dh, dtheta)
+    :param means:
+    :param stds:
+    :param max_shape:
+    :param wh_ratio_clip:
+    :return:
+    """
+    means = deltas.new_tensor(means).repeat(1, deltas.size(1) // 5)
+    stds = deltas.new_tensor(stds).repeat(1, deltas.size(1) // 5)
+    denorm_deltas = deltas * stds + means
+
+    dx = denorm_deltas[:, 0::5]
+    dy = denorm_deltas[:, 1::5]
+    dw = denorm_deltas[:, 2::5]
+    dh = denorm_deltas[:, 3::5]
+    dangle = denorm_deltas[:, 4::5]
+
+    max_ratio = np.abs(np.log(wh_ratio_clip))
+    dw = dw.clamp(min=-max_ratio, max=max_ratio)
+    dh = dh.clamp(min=-max_ratio, max=max_ratio)
+    Rroi_x = (Rrois[:, 0]).unsqueeze(1).expand_as(dx)
+    Rroi_y = (Rrois[:, 1]).unsqueeze(1).expand_as(dy)
+    Rroi_w = (Rrois[:, 2]).unsqueeze(1).expand_as(dw)
+    Rroi_h = (Rrois[:, 3]).unsqueeze(1).expand_as(dh)
+    Rroi_angle = (Rrois[:, 4]).unsqueeze(1).expand_as(dangle)
+    # import pdb
+    # pdb.set_trace()
+    gx = dx * Rroi_w * torch.cos(Rroi_angle) \
+         - dy * Rroi_h * torch.sin(Rroi_angle) + Rroi_x
+    gy = dx * Rroi_w * torch.sin(Rroi_angle) \
+         + dy * Rroi_h * torch.cos(Rroi_angle) + Rroi_y
+    gw = Rroi_w * dw.exp()
+    gh = Rroi_h * dh.exp()
+
+    # TODO: check the hard code
+    gangle = (2 * np.pi) * dangle + Rroi_angle
+    gangle = gangle % ( 2 * np.pi)
+
+    if max_shape is not None:
+        pass
+
+    bboxes = torch.stack([gx, gy, gw, gh, gangle], dim=-1).view_as(deltas)
+    return bboxes
+
+
+def delta2dbbox_360(Rrois,
                 deltas,
                 means=[0, 0, 0, 0, 0],
                 stds=[1, 1, 1, 1, 1],
