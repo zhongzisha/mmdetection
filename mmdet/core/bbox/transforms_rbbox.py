@@ -178,16 +178,19 @@ def delta2dbbox_360(Rrois,
     Rroi_angle = (Rrois[:, 4]).unsqueeze(1).expand_as(dangle)
     # import pdb
     # pdb.set_trace()
-    gx = dx * Rroi_w * torch.cos(Rroi_angle) \
-         - dy * Rroi_h * torch.sin(Rroi_angle) + Rroi_x
-    gy = dx * Rroi_w * torch.sin(Rroi_angle) \
-         + dy * Rroi_h * torch.cos(Rroi_angle) + Rroi_y
+    # gx = dx * Rroi_w * torch.cos(Rroi_angle) \
+    #      - dy * Rroi_h * torch.sin(Rroi_angle) + Rroi_x
+    # gy = dx * Rroi_w * torch.sin(Rroi_angle) \
+    #      + dy * Rroi_h * torch.cos(Rroi_angle) + Rroi_y
+    gx = dx * Rroi_w + Rroi_x
+    gy = dy * Rroi_h + Rroi_y
     gw = Rroi_w * dw.exp()
     gh = Rroi_h * dh.exp()
 
     # TODO: check the hard code
-    gangle = (2 * np.pi) * dangle + Rroi_angle
-    gangle = gangle % ( 2 * np.pi)
+    # gangle = (2 * np.pi) * dangle + Rroi_angle
+    # gangle = gangle % ( 2 * np.pi)
+    gangle = dangle + Rroi_angle
 
     if max_shape is not None:
         pass
