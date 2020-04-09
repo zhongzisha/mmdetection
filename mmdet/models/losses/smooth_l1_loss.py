@@ -42,4 +42,7 @@ class SmoothL1Loss(nn.Module):
             reduction=reduction,
             avg_factor=avg_factor,
             **kwargs)
+        if torch.isnan(loss_bbox):
+            import pdb
+            pdb.set_trace()
         return loss_bbox
