@@ -962,8 +962,7 @@ def hbb2obb_v2_360(boxes):
                           ex_ctr_y.unsqueeze(1),
                           ex_widths.unsqueeze(1),
                           ex_heights.unsqueeze(1)), 1)
-    # initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi / 2
-    initial_angles = c_bboxes.new_zeros((num_boxes, 1))
+    initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi / 2
     # initial_angles = -torch.ones((num_boxes, 1)) * np.pi/2
     dbboxes = torch.cat((c_bboxes, initial_angles), 1)
 
@@ -1109,7 +1108,7 @@ def polygonToRotRectangle_batch_360(quad_boxes):
         h = np.sqrt(np.sum(np.square(box1[1,:]-box1[2,:])))
         w = int(w)
         h = int(h)
-        rotated_boxes.append([rx,ry,w,h,angle1 - np.pi])
+        rotated_boxes.append([rx,ry,w,h,angle1])
     return np.array(rotated_boxes,dtype=np.float32).reshape(-1, 5)    # angle1 is [-np.pi, np.pi] in radians
 
 
