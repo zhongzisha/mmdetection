@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
-from mmdet.core import (AnchorGenerator, anchor_target_rbbox, delta2bbox,
+from mmdet.core import (AnchorGenerator, anchor_target_rbbox_360, delta2bbox,
                         delta2dbbox, delta2dbbox_v3, multi_apply, multiclass_nms,
                         multiclass_nms_rbbox)
 from mmdet.core.bbox.transforms_rbbox import hbb2obb_v2
@@ -171,7 +171,7 @@ class AnchorHeadRbbox_360(nn.Module):
         anchor_list, valid_flag_list = self.get_anchors(
             featmap_sizes, img_metas)
         label_channels = self.cls_out_channels if self.use_sigmoid_cls else 1
-        cls_reg_targets = anchor_target_rbbox(
+        cls_reg_targets = anchor_target_rbbox_360(
             anchor_list,
             valid_flag_list,
             gt_bboxes,
