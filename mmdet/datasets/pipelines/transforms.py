@@ -148,8 +148,8 @@ class Resize(object):
                 if len(results[key]) > 0 and isinstance(results[key][0], list):
                     scale_factor= results['scale_factor']
                     masks = np.array(results[key]).astype(np.float32)
-                    masks[:, [0, 2, 4, 6]] *= scale_factor
-                    masks[:, [1, 3, 5, 7]] *= scale_factor
+                    masks[..., [0, 2, 4, 6]] *= scale_factor
+                    masks[..., [1, 3, 5, 7]] *= scale_factor
                     masks = masks.tolist()
                 else:
                     masks = [
