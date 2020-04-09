@@ -24,11 +24,12 @@ def mse_loss(pred, target):
 @LOSSES.register_module
 class SmoothL1Loss_360(nn.Module):
 
-    def __init__(self, beta=1.0, reduction='mean', loss_weight=1.0):
+    def __init__(self, beta=1.0, reduction='mean', loss_weight=1.0, angle_loss_weight=1.0):
         super(SmoothL1Loss_360, self).__init__()
         self.beta = beta
         self.reduction = reduction
         self.loss_weight = loss_weight
+        self.angle_loss_weight = angle_loss_weight
 
     def forward(self,
                 pred,
@@ -48,7 +49,7 @@ class SmoothL1Loss_360(nn.Module):
             reduction=reduction,
             avg_factor=avg_factor,
             **kwargs)
-        loss_angle = mse_loss(
+        loss_angle = self.angle_loss_weight * mse_loss(
             pred[:, 4],
             target[:, 4],
             weight[:, 4],
