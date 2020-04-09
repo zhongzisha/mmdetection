@@ -148,9 +148,9 @@ class AnchorHeadRbbox_360(nn.Module):
         bbox_weights = bbox_weights.reshape(-1, 5)
         bbox_pred = bbox_pred.permute(0, 2, 3, 1).reshape(-1, 5)
         loss_bbox = self.loss_bbox(
-            bbox_pred,
-            bbox_targets,
-            bbox_weights,
+            bbox_pred[:,:4],
+            bbox_targets[:,:4],
+            bbox_weights[:,:4],
             avg_factor=num_total_samples)
         return loss_cls, loss_bbox
 
