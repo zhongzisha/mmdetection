@@ -146,36 +146,41 @@ class Resize(object):
                 continue
             print('Resize', type(results[key]), type(results[key][0]))
             if self.keep_ratio:
-                if len(results[key]) > 0 and isinstance(results[key][0], list):
-                    scale_factor= results['scale_factor']
-                    masks = np.array(results[key]).astype(np.float32)
-                    masks[..., [0, 2, 4, 6]] *= scale_factor
-                    masks[..., [1, 3, 5, 7]] *= scale_factor
-                    masks = masks.tolist()
-                else:
+                if results['gt_masks_is_image']:
                     masks = [
                         mmcv.imrescale(
                             mask, results['scale_factor'], interpolation='nearest')
                         for mask in results[key]
                     ]
-            else:
-                if len(results[key]) > 0 and isinstance(results[key][0], list):
-                    w_scale, h_scale = results['scale_factor'][0:2]
-                    masks = np.array(results[key]).astype(np.float32)
-                    masks[:, [0, 2, 4, 6]] *= w_scale
-                    masks[:, [1, 3, 5, 7]] *= h_scale
-                    masks = masks.tolist()
+                    if masks:
+                        results[key] = np.stack(masks)
+                    else:
+                        results[key] = np.empty(
+                            (0,) + results['img_shape'], dtype=np.uint8)
                 else:
+                    scale_factor= results['scale_factor']
+                    masks = np.array(results[key]).astype(np.float32)
+                    masks[..., [0, 2, 4, 6]] *= scale_factor
+                    masks[..., [1, 3, 5, 7]] *= scale_factor
+                    results[key] = masks.reshape((-1, 8))
+            else:
+                if results['gt_masks_is_image']:
                     mask_size = (results['img_shape'][1], results['img_shape'][0])  # h,w
                     masks = [
                         mmcv.imresize(mask, mask_size, interpolation='nearest')
                         for mask in results[key]
                     ]
-            if masks:
-                results[key] = np.stack(masks)
-            else:
-                results[key] = np.empty(
-                    (0, ) + results['img_shape'], dtype=np.uint8)
+                    if masks:
+                        results[key] = np.stack(masks)
+                    else:
+                        results[key] = np.empty(
+                            (0, ) + results['img_shape'], dtype=np.uint8)
+                else:
+                    w_scale, h_scale = results['scale_factor'][0:2]
+                    masks = np.array(results[key]).astype(np.float32)
+                    masks[:, [0, 2, 4, 6]] *= w_scale
+                    masks[:, [1, 3, 5, 7]] *= h_scale
+                    results[key] = masks.reshape((-1, 8))
 
     def _resize_seg(self, results):
         for key in results.get('seg_fields', []):
@@ -265,7 +270,17 @@ class RandomFlip(object):
             # flip masks
             for key in results.get('mask_fields', []):
                 print('RandomFlip', type(results[key]))
-                if len(results[key]) > 0 and isinstance(results[key][0], list):
+                if results['gt_masks_is_image']:
+                    masks = [
+                        mmcv.imflip(mask, direction=results['flip_direction'])
+                        for mask in results[key]
+                    ]
+                    if masks:
+                        results[key] = np.stack(masks)
+                    else:
+                        results[key] = np.empty(
+                            (0, ) + results['img_shape'], dtype=np.uint8)
+                else:
                     img_shape = results['img_shape']
                     masks = np.array(results[key]).astype(np.float32)
                     if results['flip_direction'] == 'horizontal':
@@ -278,17 +293,7 @@ class RandomFlip(object):
                         raise ValueError(
                             'Invalid flipping direction "{}"'.format(results['flip_direction'])
                         )
-                    masks = masks.tolist()
-                else:
-                    masks = [
-                        mmcv.imflip(mask, direction=results['flip_direction'])
-                        for mask in results[key]
-                    ]
-                if masks:
-                    results[key] = np.stack(masks)
-                else:
-                    results[key] = np.empty(
-                        (0, ) + results['img_shape'], dtype=np.uint8)
+                    results[key] = masks.reshape((-1, 8))
 
             # flip segs
             for key in results.get('seg_fields', []):
@@ -337,17 +342,17 @@ class Pad(object):
         pad_shape = results['pad_shape'][:2]
         for key in results.get('mask_fields', []):
             print('Pad', type(results[key]))
-            if len(results[key]) > 0 and isinstance(results[key][0], list):
-                padded_masks = results[key]
-            else:
+            if results['gt_masks_is_image']:
                 padded_masks = [
                     mmcv.impad(mask, pad_shape, pad_val=self.pad_val)
                     for mask in results[key]
                 ]
-            if padded_masks:
-                results[key] = np.stack(padded_masks, axis=0)
+                if padded_masks:
+                    results[key] = np.stack(padded_masks, axis=0)
+                else:
+                    results[key] = np.empty((0, ) + pad_shape, dtype=np.uint8)
             else:
-                results[key] = np.empty((0, ) + pad_shape, dtype=np.uint8)
+                results[key] = np.array(results[key])
 
     def _pad_seg(self, results):
         for key in results.get('seg_fields', []):

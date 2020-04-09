@@ -125,6 +125,9 @@ class LoadAnnotations(object):
         gt_masks = results['ann_info']['masks']
         if self.poly2mask:
             gt_masks = [self._poly2mask(mask, h, w) for mask in gt_masks]
+            results['gt_masks_is_image'] = True
+        else:
+            results['gt_masks_is_image'] = False
         results['gt_masks'] = gt_masks
         results['mask_fields'].append('gt_masks')
         return results
