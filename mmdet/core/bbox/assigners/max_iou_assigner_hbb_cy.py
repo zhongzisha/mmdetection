@@ -99,9 +99,6 @@ class MaxIoUAssignerCy(BaseAssigner):
         bboxes = bboxes[:, :4]
         overlaps = bbox_overlaps_cy(gt_bboxes, bboxes)
 
-        import pdb
-        pdb.set_trace()
-
         if (self.ignore_iof_thr > 0 and gt_bboxes_ignore is not None
                 and gt_bboxes_ignore.numel() > 0 and bboxes.numel() > 0):
             if self.ignore_wrt_candidates:
