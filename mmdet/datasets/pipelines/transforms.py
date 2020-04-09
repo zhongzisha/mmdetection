@@ -118,6 +118,7 @@ class Resize(object):
         results['scale_idx'] = scale_idx
 
     def _resize_img(self, results):
+        results['orig_img_size'] = results['img'].shape[0:2]   # height, width
         if self.keep_ratio:
             img, scale_factor = mmcv.imrescale(
                 results['img'], results['scale'], return_scale=True)
@@ -145,17 +146,33 @@ class Resize(object):
             if results[key] is None:
                 continue
             if self.keep_ratio:
-                masks = [
-                    mmcv.imrescale(
-                        mask, results['scale_factor'], interpolation='nearest')
-                    for mask in results[key]
-                ]
+                if len(results[key]) > 0 and isinstance(results[key][0], list):
+                    w_scale, h_scale = results['scale_factor'][0:2]
+                    masks = np.array(results[key]).astype(np.float32)
+                    masks[:, [0, 2, 4, 6]] *= w_scale
+                    masks[:, [1, 3, 5, 7]] *= h_scale
+                    masks = masks.tolist()
+                else:
+                    masks = [
+                        mmcv.imrescale(
+                            mask, results['scale_factor'], interpolation='nearest')
+                        for mask in results[key]
+                    ]
             else:
-                mask_size = (results['img_shape'][1], results['img_shape'][0])
-                masks = [
-                    mmcv.imresize(mask, mask_size, interpolation='nearest')
-                    for mask in results[key]
-                ]
+                mask_size = (results['img_shape'][1], results['img_shape'][0])   # h,w
+                if len(results[key]) > 0 and isinstance(results[key][0], list):
+                    orig_img_size = results['orig_img_size']
+                    w_scale = float(mask_size[1]) / orig_img_size[1]
+                    h_scale = float(mask_size[0]) / orig_img_size[0]
+                    masks = np.array(results[key]).astype(np.float32)
+                    masks[:, [0, 2, 4, 6]] *= w_scale
+                    masks[:, [1, 3, 5, 7]] *= h_scale
+                    masks = masks.tolist()
+                else:
+                    masks = [
+                        mmcv.imresize(mask, mask_size, interpolation='nearest')
+                        for mask in results[key]
+                    ]
             if masks:
                 results[key] = np.stack(masks)
             else:
@@ -249,10 +266,25 @@ class RandomFlip(object):
                                               results['flip_direction'])
             # flip masks
             for key in results.get('mask_fields', []):
-                masks = [
-                    mmcv.imflip(mask, direction=results['flip_direction'])
-                    for mask in results[key]
-                ]
+                if len(results[key]) > 0 and isinstance(results[key][0], list):
+                    img_shape = results['img_shape']
+                    masks = np.array(results[key]).astype(np.float32)
+                    if results['flip_direction'] == 'horizontal':
+                        w = img_shape[1]
+                        masks[..., 0::2] = w - masks[..., 0::2] - 1
+                    elif results['flip_direction'] == 'vertical':
+                        h = img_shape[0]
+                        masks[..., 1::2] = h - masks[..., 1::2] - 1
+                    else:
+                        raise ValueError(
+                            'Invalid flipping direction "{}"'.format(results['flip_direction'])
+                        )
+                    masks = masks.tolist()
+                else:
+                    masks = [
+                        mmcv.imflip(mask, direction=results['flip_direction'])
+                        for mask in results[key]
+                    ]
                 if masks:
                     results[key] = np.stack(masks)
                 else:
@@ -305,10 +337,13 @@ class Pad(object):
     def _pad_masks(self, results):
         pad_shape = results['pad_shape'][:2]
         for key in results.get('mask_fields', []):
-            padded_masks = [
-                mmcv.impad(mask, pad_shape, pad_val=self.pad_val)
-                for mask in results[key]
-            ]
+            if len(results[key]) > 0 and isinstance(results[key][0], list):
+                padded_masks = results[key]
+            else:
+                padded_masks = [
+                    mmcv.impad(mask, pad_shape, pad_val=self.pad_val)
+                    for mask in results[key]
+                ]
             if padded_masks:
                 results[key] = np.stack(padded_masks, axis=0)
             else:
