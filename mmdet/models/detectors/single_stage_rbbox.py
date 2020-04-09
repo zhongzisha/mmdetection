@@ -57,9 +57,9 @@ class SingleStageDetectorRbbox(BaseDetectorNew):
                 gt_masks,
                 gt_labels,
                 gt_bboxes_ignore=None):
-        print('in single stage rbbox')
-        import pdb
-        pdb.set_trace()
+        # print('in single stage rbbox')
+        # import pdb
+        # pdb.set_trace()
         x = self.extract_feat(img)
 
         losses = dict()
