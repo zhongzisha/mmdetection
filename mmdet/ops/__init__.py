@@ -19,8 +19,6 @@ from .upsample import build_upsample_layer
 from .utils import get_compiler_version, get_compiling_cuda_version
 from .roi_align_rotated import RoIAlignRotated, roi_align_rotated
 from .psroi_align_rotated import PSRoIAlignRotated, psroi_align_rotated
-from .roi_align_rotated_360 import RoIAlignRotated as RoIAlignRotated_360
-from .roi_align_rotated_360 import roi_align_rotated as roi_align_rotated_360
 
 __all__ = [
     'nms', 'soft_nms', 'RoIAlign', 'roi_align', 'RoIPool', 'roi_pool',
@@ -33,5 +31,4 @@ __all__ = [
     'ConvModule', 'ConvWS2d', 'conv_ws_2d', 'build_norm_layer', 'Scale',
     'build_upsample_layer',
     'RoIAlignRotated', 'roi_align_rotated', 'PSRoIAlignRotated', 'psroi_align_rotated',
-    'RoIAlignRotated_360', 'roi_align_rotated_360',
 ]
