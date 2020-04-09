@@ -20,7 +20,7 @@ def anchor_target_rbbox_360(anchor_list,
                   sampling=True,
                   unmap_outputs=True,
                   with_module=True,
-                  hbb_trans='hbb2obb_v2'):
+                  hbb_trans='hbb2obb_v2_360'):
     """Compute regression and classification targets for anchors.
 
     Args:
@@ -157,9 +157,9 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # pos_gt_obbs_ts = torch.from_numpy(pos_gt_obbs).to(sampling_result.pos_bboxes.device)
     # implementation B
     gt_obbs = gt_mask_bp_obbs_360(gt_masks)
-    print('in anchor_target_rbbox_360.py')
-    import pdb
-    pdb.set_trace()
+    # print('in anchor_target_rbbox_360.py')
+    # import pdb
+    # pdb.set_trace()
     gt_obbs_ts = torch.from_numpy(gt_obbs).to(sampling_result.pos_bboxes.device)
     pos_gt_obbs_ts = gt_obbs_ts[pos_assigned_gt_inds]
     if len(pos_inds) > 0:
@@ -175,13 +175,14 @@ def anchor_target_rbbox_360_single(flat_anchors,
         # else:
         #     print('no such hbb2obb trans function')
         #     raise Exception
-        print('for hbb2obb_v2_360 and dbbox2delta_v3_360')
-        import pdb
-        pdb.set_trace()
+        # print('for hbb2obb_v2_360 and dbbox2delta_v3_360')
+        # import pdb
+        # pdb.set_trace()
         pos_ext_bboxes = hbb2obb_v2_360(sampling_result.pos_bboxes)
         pos_bbox_targets = dbbox2delta_v3_360(pos_ext_bboxes,
                                               pos_gt_obbs_ts,
-                                              target_means, target_stds)
+                                              target_means,
+                                              target_stds)
         bbox_targets[pos_inds, :] = pos_bbox_targets
         bbox_weights[pos_inds, :] = 1.0
         if gt_labels is None:
