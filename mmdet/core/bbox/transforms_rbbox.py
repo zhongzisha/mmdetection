@@ -962,7 +962,8 @@ def hbb2obb_v2_360(boxes):
                           ex_ctr_y.unsqueeze(1),
                           ex_widths.unsqueeze(1),
                           ex_heights.unsqueeze(1)), 1)
-    initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi / 2
+    # initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi / 2
+    initial_angles = c_bboxes.new_zeros((num_boxes, 1))
     # initial_angles = -torch.ones((num_boxes, 1)) * np.pi/2
     dbboxes = torch.cat((c_bboxes, initial_angles), 1)
 
