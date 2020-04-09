@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
-from mmdet.core import (AnchorGenerator, anchor_target_rbbox_360,
-                        delta2dbbox_v3_360, multi_apply,
-                        multiclass_nms_rbbox_360)
-from mmdet.core.bbox.transforms_rbbox import hbb2obb_v2_360
+from mmdet.core import (AnchorGenerator, anchor_target_rbbox, delta2bbox,
+                        delta2dbbox, delta2dbbox_v3, multi_apply, multiclass_nms,
+                        multiclass_nms_rbbox)
+from mmdet.core.bbox.transforms_rbbox import hbb2obb_v2
 from ..builder import build_loss
 from ..registry import HEADS
 
@@ -41,7 +41,7 @@ class AnchorHeadRbbox_360(nn.Module):
                  target_means=(.0, .0, .0, .0, .0),
                  target_stds=(1.0, 1.0, 1.0, 1.0, 1.0),
                  with_module=True,
-                 hbb_trans='hbb2obb_v2_360',
+                 hbb_trans='hbb2obb_v2',
                  loss_cls=dict(
                      type='CrossEntropyLoss',
                      use_sigmoid=True,
@@ -82,6 +82,7 @@ class AnchorHeadRbbox_360(nn.Module):
     def _init_layers(self):
         self.conv_cls = nn.Conv2d(self.feat_channels,
                                   self.num_anchors * self.cls_out_channels, 1)
+        # self.conv_reg = nn.Conv2d(self.feat_channels, self.num_anchors * 4, 1)
         self.conv_reg = nn.Conv2d(self.feat_channels, self.num_anchors * 5, 1)
 
     def init_weights(self):
@@ -140,7 +141,8 @@ class AnchorHeadRbbox_360(nn.Module):
         # classification loss
         labels = labels.reshape(-1)
         label_weights = label_weights.reshape(-1)
-        cls_score = cls_score.permute(0, 2, 3, 1).reshape(-1, self.cls_out_channels)
+        cls_score = cls_score.permute(0, 2, 3,
+                                      1).reshape(-1, self.cls_out_channels)
         loss_cls = self.loss_cls(
             cls_score, labels, label_weights, avg_factor=num_total_samples)
         # regression loss
@@ -169,7 +171,7 @@ class AnchorHeadRbbox_360(nn.Module):
         anchor_list, valid_flag_list = self.get_anchors(
             featmap_sizes, img_metas)
         label_channels = self.cls_out_channels if self.use_sigmoid_cls else 1
-        cls_reg_targets = anchor_target_rbbox_360(
+        cls_reg_targets = anchor_target_rbbox(
             anchor_list,
             valid_flag_list,
             gt_bboxes,
@@ -260,8 +262,12 @@ class AnchorHeadRbbox_360(nn.Module):
                 bbox_pred = bbox_pred[topk_inds, :]
                 scores = scores[topk_inds, :]
 
-            rbbox_ex_anchors = hbb2obb_v2_360(anchors)
-            bboxes = delta2dbbox_v3_360(rbbox_ex_anchors, bbox_pred, self.target_means,
+            rbbox_ex_anchors = hbb2obb_v2(anchors)
+            if self.with_module:
+                bboxes = delta2dbbox(rbbox_ex_anchors, bbox_pred, self.target_means,
+                                     self.target_stds, img_shape)
+            else:
+                bboxes = delta2dbbox_v3(rbbox_ex_anchors, bbox_pred, self.target_means,
                                      self.target_stds, img_shape)
             mlvl_bboxes.append(bboxes)
             mlvl_scores.append(scores)
@@ -273,7 +279,10 @@ class AnchorHeadRbbox_360(nn.Module):
         if self.use_sigmoid_cls:
             padding = mlvl_scores.new_zeros(mlvl_scores.shape[0], 1)
             mlvl_scores = torch.cat([padding, mlvl_scores], dim=1)
-        det_bboxes, det_labels = multiclass_nms_rbbox_360(mlvl_bboxes, mlvl_scores,
+        # det_bboxes, det_labels = multiclass_nms(mlvl_bboxes, mlvl_scores,
+        #                                         cfg.score_thr, cfg.nms,
+        #                                         cfg.max_per_img)
+        det_bboxes, det_labels = multiclass_nms_rbbox(mlvl_bboxes, mlvl_scores,
                                                 cfg.score_thr, cfg.nms,
                                                 cfg.max_per_img)
         return det_bboxes, det_labels
