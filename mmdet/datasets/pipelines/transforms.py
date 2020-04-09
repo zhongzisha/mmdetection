@@ -118,7 +118,6 @@ class Resize(object):
         results['scale_idx'] = scale_idx
 
     def _resize_img(self, results):
-        results['orig_img_size'] = results['img'].shape[0:2]   # height, width
         if self.keep_ratio:
             img, scale_factor = mmcv.imrescale(
                 results['img'], results['scale'], return_scale=True)
@@ -147,10 +146,10 @@ class Resize(object):
                 continue
             if self.keep_ratio:
                 if len(results[key]) > 0 and isinstance(results[key][0], list):
-                    w_scale, h_scale = results['scale_factor'][0:2]
+                    scale_factor= results['scale_factor']
                     masks = np.array(results[key]).astype(np.float32)
-                    masks[:, [0, 2, 4, 6]] *= w_scale
-                    masks[:, [1, 3, 5, 7]] *= h_scale
+                    masks[:, [0, 2, 4, 6]] *= scale_factor
+                    masks[:, [1, 3, 5, 7]] *= scale_factor
                     masks = masks.tolist()
                 else:
                     masks = [
@@ -159,16 +158,14 @@ class Resize(object):
                         for mask in results[key]
                     ]
             else:
-                mask_size = (results['img_shape'][1], results['img_shape'][0])   # h,w
                 if len(results[key]) > 0 and isinstance(results[key][0], list):
-                    orig_img_size = results['orig_img_size']
-                    w_scale = float(mask_size[1]) / orig_img_size[1]
-                    h_scale = float(mask_size[0]) / orig_img_size[0]
+                    w_scale, h_scale = results['scale_factor'][0:2]
                     masks = np.array(results[key]).astype(np.float32)
                     masks[:, [0, 2, 4, 6]] *= w_scale
                     masks[:, [1, 3, 5, 7]] *= h_scale
                     masks = masks.tolist()
                 else:
+                    mask_size = (results['img_shape'][1], results['img_shape'][0])  # h,w
                     masks = [
                         mmcv.imresize(mask, mask_size, interpolation='nearest')
                         for mask in results[key]
