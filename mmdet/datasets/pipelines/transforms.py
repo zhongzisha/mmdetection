@@ -144,6 +144,7 @@ class Resize(object):
         for key in results.get('mask_fields', []):
             if results[key] is None:
                 continue
+            print(type(results[key]), type(results[key][0]))
             if self.keep_ratio:
                 if len(results[key]) > 0 and isinstance(results[key][0], list):
                     scale_factor= results['scale_factor']
@@ -263,6 +264,7 @@ class RandomFlip(object):
                                               results['flip_direction'])
             # flip masks
             for key in results.get('mask_fields', []):
+                print(type(results[key]))
                 if len(results[key]) > 0 and isinstance(results[key][0], list):
                     img_shape = results['img_shape']
                     masks = np.array(results[key]).astype(np.float32)
