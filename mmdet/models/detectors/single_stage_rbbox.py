@@ -89,7 +89,7 @@ class SingleStageDetectorRbbox(BaseDetectorNew):
                         import pdb
                         pdb.set_trace()
 
-        print('losses', losses)
+        # print('losses', losses)
         for key in losses.keys():
             for x in losses[key]:
                 if torch.isnan(x):
