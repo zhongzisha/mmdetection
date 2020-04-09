@@ -98,6 +98,59 @@ def delta2dbbox(Rrois,
     return bboxes
 
 
+def delta2dbbox(Rrois,
+                deltas,
+                means=[0, 0, 0, 0, 0],
+                stds=[1, 1, 1, 1, 1],
+                max_shape=None,
+                wh_ratio_clip=16 / 1000):
+    """
+
+    :param Rrois: (cx, cy, w, h, theta)
+    :param deltas: (dx, dy, dw, dh, dtheta)
+    :param means:
+    :param stds:
+    :param max_shape:
+    :param wh_ratio_clip:
+    :return:
+    """
+    means = deltas.new_tensor(means).repeat(1, deltas.size(1) // 5)
+    stds = deltas.new_tensor(stds).repeat(1, deltas.size(1) // 5)
+    denorm_deltas = deltas * stds + means
+
+    dx = denorm_deltas[:, 0::5]
+    dy = denorm_deltas[:, 1::5]
+    dw = denorm_deltas[:, 2::5]
+    dh = denorm_deltas[:, 3::5]
+    dangle = denorm_deltas[:, 4::5]
+
+    max_ratio = np.abs(np.log(wh_ratio_clip))
+    dw = dw.clamp(min=-max_ratio, max=max_ratio)
+    dh = dh.clamp(min=-max_ratio, max=max_ratio)
+    Rroi_x = (Rrois[:, 0]).unsqueeze(1).expand_as(dx)
+    Rroi_y = (Rrois[:, 1]).unsqueeze(1).expand_as(dy)
+    Rroi_w = (Rrois[:, 2]).unsqueeze(1).expand_as(dw)
+    Rroi_h = (Rrois[:, 3]).unsqueeze(1).expand_as(dh)
+    Rroi_angle = (Rrois[:, 4]).unsqueeze(1).expand_as(dangle)
+    # import pdb
+    # pdb.set_trace()
+    gx = dx * Rroi_w * torch.cos(Rroi_angle) \
+         - dy * Rroi_h * torch.sin(Rroi_angle) + Rroi_x
+    gy = dx * Rroi_w * torch.sin(Rroi_angle) \
+         + dy * Rroi_h * torch.cos(Rroi_angle) + Rroi_y
+    gw = Rroi_w * dw.exp()
+    gh = Rroi_h * dh.exp()
+
+    # TODO: check the hard code
+    gangle = (2 * np.pi) * dangle + Rroi_angle
+    gangle = gangle % ( 2 * np.pi)
+
+    if max_shape is not None:
+        pass
+
+    bboxes = torch.stack([gx, gy, gw, gh, gangle], dim=-1).view_as(deltas)
+    return bboxes
+
 def dbbox2delta_v3(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
     """
     This version removes the module operation
@@ -140,7 +193,105 @@ def dbbox2delta_v3(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1])
     return deltas
 
 
+def dbbox2delta_v3_360(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1]):
+    """
+    This version removes the module operation
+    :param proposals: (x_ctr, y_ctr, w, h, angle)
+            shape (n, 5)
+    :param gt: (x_ctr, y_ctr, w, h, angle)
+    :param means:
+    :param stds:
+    :return: encoded targets: shape (n, 5)
+    """
+    proposals = proposals.float()
+    gt = gt.float()
+    gt_widths = gt[..., 2]
+    gt_heights = gt[..., 3]
+    gt_angle = gt[..., 4]
+
+    proposals_widths = proposals[..., 2]
+    proposals_heights = proposals[..., 3]
+    proposals_angle = proposals[..., 4]
+
+    coord = gt[..., 0:2] - proposals[..., 0:2]
+    dx = (torch.cos(proposals[..., 4]) * coord[..., 0] +
+          torch.sin(proposals[..., 4]) * coord[..., 1]) / proposals_widths
+    dy = (-torch.sin(proposals[..., 4]) * coord[..., 0] +
+          torch.cos(proposals[..., 4]) * coord[..., 1]) / proposals_heights
+    dw = torch.log(gt_widths / proposals_widths)
+    dh = torch.log(gt_heights / proposals_heights)
+    # import pdb
+    # print('in dbbox2delta v3')
+    # pdb.set_trace()
+    # dangle = (gt_angle - proposals_angle) % (2 * math.pi) / (2 * math.pi)
+    # TODO: debug for it, proposals_angle are -1.5708, gt_angle should close to -1.57, actully they close to 5.0153
+    dangle = gt_angle - proposals_angle
+    deltas = torch.stack((dx, dy, dw, dh, dangle), -1)
+
+    means = deltas.new_tensor(means).unsqueeze(0)
+    stds = deltas.new_tensor(stds).unsqueeze(0)
+    deltas = deltas.sub_(means).div_(stds)
+
+    return deltas
+
+
 def delta2dbbox_v3(Rrois,
+                deltas,
+                means=[0, 0, 0, 0, 0],
+                stds=[1, 1, 1, 1, 1],
+                max_shape=None,
+                wh_ratio_clip=16 / 1000):
+    """
+    This version removes the module operation
+    :param Rrois: (cx, cy, w, h, theta)
+    :param deltas: (dx, dy, dw, dh, dtheta)
+    :param means:
+    :param stds:
+    :param max_shape:
+    :param wh_ratio_clip:
+    :return:
+    """
+    means = deltas.new_tensor(means).repeat(1, deltas.size(1) // 5)
+    stds = deltas.new_tensor(stds).repeat(1, deltas.size(1) // 5)
+    denorm_deltas = deltas * stds + means
+
+    dx = denorm_deltas[:, 0::5]
+    dy = denorm_deltas[:, 1::5]
+    dw = denorm_deltas[:, 2::5]
+    dh = denorm_deltas[:, 3::5]
+    dangle = denorm_deltas[:, 4::5]
+
+    max_ratio = np.abs(np.log(wh_ratio_clip))
+    dw = dw.clamp(min=-max_ratio, max=max_ratio)
+    dh = dh.clamp(min=-max_ratio, max=max_ratio)
+    Rroi_x = (Rrois[:, 0]).unsqueeze(1).expand_as(dx)
+    Rroi_y = (Rrois[:, 1]).unsqueeze(1).expand_as(dy)
+    Rroi_w = (Rrois[:, 2]).unsqueeze(1).expand_as(dw)
+    Rroi_h = (Rrois[:, 3]).unsqueeze(1).expand_as(dh)
+    Rroi_angle = (Rrois[:, 4]).unsqueeze(1).expand_as(dangle)
+    # import pdb
+    # pdb.set_trace()
+    gx = dx * Rroi_w * torch.cos(Rroi_angle) \
+         - dy * Rroi_h * torch.sin(Rroi_angle) + Rroi_x
+    gy = dx * Rroi_w * torch.sin(Rroi_angle) \
+         + dy * Rroi_h * torch.cos(Rroi_angle) + Rroi_y
+    gw = Rroi_w * dw.exp()
+    gh = Rroi_h * dh.exp()
+
+    # TODO: check the hard code
+    # gangle = (2 * np.pi) * dangle + Rroi_angle
+    gangle = dangle + Rroi_angle
+    # gangle = gangle % ( 2 * np.pi)
+
+    if max_shape is not None:
+        pass
+
+    bboxes = torch.stack([gx, gy, gw, gh, gangle], dim=-1).view_as(deltas)
+    return bboxes
+
+
+
+def delta2dbbox_v3_360(Rrois,
                 deltas,
                 means=[0, 0, 0, 0, 0],
                 stds=[1, 1, 1, 1, 1],
@@ -606,6 +757,15 @@ def gt_mask_bp_obbs(gt_masks, with_module=True):
 
     return gt_obbs
 
+def gt_mask_bp_obbs_360(gt_masks, with_module=True):
+
+    # trans gt_masks to gt_obbs
+    # gt_polys = mask2poly(gt_masks)
+    # gt_bp_polys = get_best_begin_point(gt_polys)
+    gt_obbs = polygonToRotRectangle_batch_360(gt_masks)
+
+    return gt_obbs
+
 
 def gt_mask_bp_obbs_list(gt_masks_list):
 
@@ -613,6 +773,12 @@ def gt_mask_bp_obbs_list(gt_masks_list):
 
     return list(gt_obbs_list)
 
+
+def gt_mask_bp_obbs_list_360(gt_masks_list):
+
+    gt_obbs_list = map(gt_mask_bp_obbs_360, gt_masks_list)
+
+    return list(gt_obbs_list)
 
 def cal_line_length(point1, point2):
     return math.sqrt( math.pow(point1[0] - point2[0], 2) + math.pow(point1[1] - point2[1], 2))
@@ -778,6 +944,27 @@ def hbb2obb_v2(boxes):
 
     return dbboxes
 
+def hbb2obb_v2_360(boxes):
+    """
+    fix a bug
+    :param boxes: shape (n, 4) (xmin, ymin, xmax, ymax)
+    :return: dbboxes: shape (n, 5) (x_ctr, y_ctr, w, h, angle)
+    """
+    num_boxes = boxes.size(0)
+    ex_heights = boxes[..., 2] - boxes[..., 0] + 1.0
+    ex_widths = boxes[..., 3] - boxes[..., 1] + 1.0
+    ex_ctr_x = boxes[..., 0] + 0.5 * (ex_heights - 1.0)
+    ex_ctr_y = boxes[..., 1] + 0.5 * (ex_widths - 1.0)
+    c_bboxes = torch.cat((ex_ctr_x.unsqueeze(1),
+                          ex_ctr_y.unsqueeze(1),
+                          ex_widths.unsqueeze(1),
+                          ex_heights.unsqueeze(1)), 1)
+    initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi / 2
+    # initial_angles = -torch.ones((num_boxes, 1)) * np.pi/2
+    dbboxes = torch.cat((c_bboxes, initial_angles), 1)
+
+    return dbboxes
+
 
 def hbb2obb_v3(boxes):
     """
@@ -865,6 +1052,94 @@ def polygonToRotRectangle_batch(bbox, with_module=True):
         angle = angle[:, np.newaxis]
     dboxes = np.concatenate((center[:, 0].astype(np.float), center[:, 1].astype(np.float), w, h, angle), axis=1)
     return dboxes
+
+
+def polygonToRotRectangle_batch_360(quad_boxes):
+    rotated_boxes = []
+    for box in quad_boxes:
+        box = np.array(box).reshape(4, 2)
+        # box: [4x2],0:top-left,1:top-right,2:bottom-right,3:bottom-left
+        p1x = (box[0, 0] + box[1, 0]) / 2
+        p1y = (box[0, 1] + box[1, 1]) / 2
+        p2x = (box[2, 0] + box[3, 0]) / 2
+        p2y = (box[2, 1] + box[3, 1]) / 2
+
+        if p1x>p2x:
+          angle1 = np.arctan(np.abs(p1y-p2y)/np.abs(p2x-p1x))
+          if p1y==p2y:
+            angle1 = 0
+          elif p1y>p2y:
+            # 4
+            angle1 = 2*np.pi - angle1
+          elif p1y<p2y:
+            # 1
+            angle1 = angle1
+        elif p1x<p2x:
+          angle1 = np.arctan(np.abs(p1y-p2y)/np.abs(p2x-p1x))
+          if p1y==p2y:
+            angle1 = np.pi
+          elif p1y>p2y:
+            # 3
+            angle1 = np.pi + angle1
+          elif p1y<p2y:
+            # 2
+            angle1 = np.pi - angle1
+        else:
+          if p1y>p2y:
+            angle1 = 1.5*np.pi
+          else:
+            angle1 = np.pi/2
+        # rotate the four points
+        rx, ry = np.mean(box, axis=0)
+        rect1 = cv2.minAreaRect(box)
+        x, y, w, h, theta = rect1[0][0], rect1[0][1], rect1[1][0], rect1[1][1], rect1[2]
+        box1 = cv2.boxPoints(((x,y),(w,h),theta))  # theta in degrees
+        box1 = box1.reshape([4,2])
+        indexes = np.array([[0,1,2,3],[3,0,1,2],[2,3,0,1],[1,2,3,0]],dtype=np.int)
+        dist = np.zeros((4,),dtype=np.float32)
+        for i in range(4):
+          dist[i] = np.sum(np.sqrt(np.sum(np.square(box-box1[indexes[i]]),axis=0)))
+        mini = np.argmin(dist)
+        box1 = box1[indexes[mini]]
+        w = np.sqrt(np.sum(np.square(box1[0,:]-box1[1,:])))
+        h = np.sqrt(np.sum(np.square(box1[1,:]-box1[2,:])))
+        w = int(w)
+        h = int(h)
+        rotated_boxes.append([rx,ry,w,h,angle1])
+    return np.array(rotated_boxes,dtype=np.float32).reshape(-1, 5)    # angle1 is [0, 360] in degrees
+
+
+def RotBox2Polys_360(rotated_boxes):
+    quad_boxes = []
+    for rbox in rotated_boxes:
+        cx = rbox[0]
+        cy = rbox[1]
+        w = rbox[2]
+        h = rbox[3]
+        angle = rbox[4]  # angle is in [0, 2*np.pi] in radians
+        w = int(w)
+        h = int(h)
+        minx, miny = np.floor(np.array([-w, -h]) / 2)
+        maxx, maxy = np.floor(np.array([w, h]) / 2)
+        box = np.array([[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy]], dtype=np.float32)
+        rx, ry = np.mean(box, axis=0)
+        theta = angle - np.pi / 2
+        scale = 1.0
+        alpha = scale * np.cos(theta)
+        beta = scale * np.sin(theta)
+        M = [[alpha, beta, (1 - alpha) * rx - beta * ry + cx],
+             [-beta, alpha, beta * rx + (1 - alpha) * ry + cy],
+             [0, 0, 1]]
+        M = np.array(M, dtype=np.float32)
+        box1 = []
+        for bi in range(4):
+            x = box[bi, 0]
+            y = box[bi, 1]
+            x1 = int(M[0, 0] * x + M[0, 1] * y + M[0, 2])
+            y1 = int(M[1, 0] * x + M[1, 1] * y + M[1, 2])
+            box1.append([x1, y1])
+        quad_boxes.append(box1)
+    return np.array(quad_boxes, dtype=np.float32).reshape(-1, 8)
 
 
 def RotBox2Polys(dboxes):

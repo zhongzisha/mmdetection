@@ -19,7 +19,9 @@ from .transforms_rbbox import (dbbox2delta, delta2dbbox, mask2poly,
                                choose_best_Rroi_batch, delta2dbbox_v2,
                                delta2dbbox_v3, dbbox2delta_v3, hbb2obb_v2, RotBox2Polys, RotBox2Polys_torch,
                                poly2bbox, dbbox_rotate_mapping, bbox_rotate_mapping,
-                               bbox_rotate_mapping, dbbox_mapping_back)
+                               bbox_rotate_mapping, dbbox_mapping_back,
+                               dbbox2delta_v3_360, hbb2obb_v2_360, delta2dbbox_v3_360,
+                               polygonToRotRectangle_batch_360, RotBox2Polys_360, gt_mask_bp_obbs_list_360)
 from .bbox_target_rbbox import bbox_target_rbbox, rbbox_target_rbbox
 
 from .assign_sampling import (  # isort:skip, avoid recursive imports
@@ -41,5 +43,7 @@ __all__ = [
     'rbbox_target_rbbox', 'choose_best_match_batch', 'choose_best_Rroi_batch',
     'delta2dbbox_v2', 'delta2dbbox_v3', 'dbbox2delta_v3',
     'hbb2obb_v2', 'RotBox2Polys', 'RotBox2Polys_torch', 'poly2bbox', 'dbbox_rotate_mapping',
-    'bbox_rotate_mapping', 'bbox_rotate_mapping', 'dbbox_mapping_back'
+    'bbox_rotate_mapping', 'bbox_rotate_mapping', 'dbbox_mapping_back',
+    'dbbox2delta_v3_360', 'hbb2obb_v2_360', 'gt_mask_bp_obbs_list_360', 'delta2dbbox_v3_360',
+    'RotBox2Polys_360'
 ]
