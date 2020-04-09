@@ -144,7 +144,6 @@ class Resize(object):
         for key in results.get('mask_fields', []):
             if results[key] is None:
                 continue
-            print('Resize', type(results[key]), type(results[key][0]))
             if self.keep_ratio:
                 if results['gt_masks_is_image']:
                     masks = [
@@ -269,7 +268,6 @@ class RandomFlip(object):
                                               results['flip_direction'])
             # flip masks
             for key in results.get('mask_fields', []):
-                print('RandomFlip', type(results[key]))
                 if results['gt_masks_is_image']:
                     masks = [
                         mmcv.imflip(mask, direction=results['flip_direction'])
@@ -341,7 +339,6 @@ class Pad(object):
     def _pad_masks(self, results):
         pad_shape = results['pad_shape'][:2]
         for key in results.get('mask_fields', []):
-            print('Pad', type(results[key]))
             if results['gt_masks_is_image']:
                 padded_masks = [
                     mmcv.impad(mask, pad_shape, pad_val=self.pad_val)
