@@ -73,9 +73,10 @@ class SingleStageDetectorRbbox(BaseDetectorNew):
                 *bbox_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(bbox_losses)
             for key in bbox_losses:
-                if torch.isnan(bbox_losses[key]):
-                    import pdb
-                    pdb.set_trace()
+                for x in bbox_losses[key]:
+                    if torch.isnan(x):
+                        import pdb
+                        pdb.set_trace()
         if self.with_rbbox:
             rbbox_outs = self.rbbox_head(x)
             rbbox_loss_inputs = rbbox_outs + (gt_bboxes, gt_masks, gt_labels, img_metas, self.train_cfg)
@@ -83,9 +84,10 @@ class SingleStageDetectorRbbox(BaseDetectorNew):
                 *rbbox_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rbbox_losses)
             for key in rbbox_losses:
-                if torch.isnan(rbbox_losses[key]):
-                    import pdb
-                    pdb.set_trace()
+                for x in rbbox_losses[key]:
+                    if torch.isnan(x):
+                        import pdb
+                        pdb.set_trace()
 
         print('losses', losses)
         for key in losses.keys():
