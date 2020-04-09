@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
-from mmdet.core import (AnchorGenerator, anchor_target_rbbox_360, delta2bbox,
+from mmdet.core import (AnchorGenerator, anchor_target_rbbox_360,
                         delta2dbbox_v3_360, multi_apply,
                         multiclass_nms_rbbox_360)
 from mmdet.core.bbox.transforms_rbbox import hbb2obb_v2_360
@@ -82,7 +82,6 @@ class AnchorHeadRbbox_360(nn.Module):
     def _init_layers(self):
         self.conv_cls = nn.Conv2d(self.feat_channels,
                                   self.num_anchors * self.cls_out_channels, 1)
-        # self.conv_reg = nn.Conv2d(self.feat_channels, self.num_anchors * 4, 1)
         self.conv_reg = nn.Conv2d(self.feat_channels, self.num_anchors * 5, 1)
 
     def init_weights(self):
@@ -274,9 +273,6 @@ class AnchorHeadRbbox_360(nn.Module):
         if self.use_sigmoid_cls:
             padding = mlvl_scores.new_zeros(mlvl_scores.shape[0], 1)
             mlvl_scores = torch.cat([padding, mlvl_scores], dim=1)
-        # det_bboxes, det_labels = multiclass_nms(mlvl_bboxes, mlvl_scores,
-        #                                         cfg.score_thr, cfg.nms,
-        #                                         cfg.max_per_img)
         det_bboxes, det_labels = multiclass_nms_rbbox_360(mlvl_bboxes, mlvl_scores,
                                                 cfg.score_thr, cfg.nms,
                                                 cfg.max_per_img)
