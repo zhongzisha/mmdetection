@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 
 from .base_new import BaseDetectorNew
 from .. import builder
@@ -77,6 +78,12 @@ class SingleStageDetectorRbbox(BaseDetectorNew):
             rbbox_losses = self.rbbox_head.loss(
                 *rbbox_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rbbox_losses)
+
+        for key in losses:
+            if torch.isnan(losses[key]):
+                import pdb
+                pdb.set_trace()
+
         return losses
 
     # def simple_test(self, img, img_meta, rescale=False):
