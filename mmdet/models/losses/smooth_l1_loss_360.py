@@ -22,8 +22,10 @@ def mse_loss(pred, target):
 
 
 @weighted_loss
-def cos_loss(pred, target, avg_factor=1.):
+def cos_loss(pred, target, weight=None, avg_factor=1.):
     loss = torch.cos(target - pred)
+    if weight is not None:
+        loss = loss * weight
     loss = loss.sum() / avg_factor
     return loss
 
