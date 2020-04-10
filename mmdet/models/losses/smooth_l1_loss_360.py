@@ -56,6 +56,8 @@ class SmoothL1Loss_360(nn.Module):
             reduction=reduction,
             avg_factor=avg_factor,
             **kwargs)
-        import pdb
-        pdb.set_trace()
+        print(pred)
+        if torch.isnan(loss_bbox) or torch.isnan(loss_angle):
+            import pdb
+            pdb.set_trace()
         return loss_bbox + loss_angle
