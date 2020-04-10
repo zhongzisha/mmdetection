@@ -202,6 +202,10 @@ class AnchorHeadRbbox_360(nn.Module):
             bbox_weights_list,
             num_total_samples=num_total_samples,
             cfg=cfg)
+        print(losses_cls, losses_bbox)
+        if torch.isnan(losses_cls) or torch.isnan(losses_bbox):
+            import pdb
+            pdb.set_trace()
         return dict(rbbox_loss_cls=losses_cls, rbbox_loss_bbox=losses_bbox)
 
     def get_bboxes(self, cls_scores, bbox_preds, img_metas, cfg,
