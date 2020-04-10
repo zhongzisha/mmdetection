@@ -21,7 +21,7 @@ def mse_loss(pred, target):
     return F.mse_loss(pred, target, reduction='none')
 
 
-def cos_loss(pred, target, weight=None, avg_factor=1.):
+def cos_loss(pred, target, weight=None, reduction='none', avg_factor=1.):
     loss = torch.cos(target - pred)
     if weight is not None:
         loss = loss * weight
@@ -57,10 +57,11 @@ class SmoothL1Loss_360(nn.Module):
             reduction=reduction,
             avg_factor=avg_factor,
             **kwargs)
-        loss_angle = self.angle_loss_weight * cos_loss(
+        loss_angle = self.angle_loss_weight * mse_loss(
             pred[:, 4],
             target[:, 4],
             weight[:, 4],
+            reduction=reduction,
             avg_factor=avg_factor)
         print('loss_bbox: ', loss_bbox, ', loss_angle: ', loss_angle)
         return loss_bbox + loss_angle
