@@ -22,6 +22,7 @@ from .RoITransformer import RoITransformer
 from .faster_rcnn_hbb_obb import FasterRCNNHBBOBB
 from .single_stage_rbbox import SingleStageDetectorRbbox
 from .retinanet_obb import RetinaNetRbbox
+from .single_stage_rbbox_360 import SingleStageDetectorRbbox_360
 from .retinanet_obb_360 import RetinaNetRbbox_360
 
 __all__ = [
@@ -31,5 +32,6 @@ __all__ = [
     'RepPointsDetector', 'FOVEA',
     'FasterRCNNOBB', 'TwoStageDetectorRbbox',
     'RoITransformer', 'FasterRCNNHBBOBB',
-    'SingleStageDetectorRbbox', 'RetinaNetRbbox', 'RetinaNetRbbox_360'
+    'SingleStageDetectorRbbox', 'RetinaNetRbbox',
+    'SingleStageDetectorRbbox_360', 'RetinaNetRbbox_360'
 ]

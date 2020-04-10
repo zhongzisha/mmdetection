@@ -1,9 +1,9 @@
-from .single_stage_rbbox import SingleStageDetectorRbbox
+from .single_stage_rbbox_360 import SingleStageDetectorRbbox_360
 from ..registry import DETECTORS
 
 
 @DETECTORS.register_module
-class RetinaNetRbbox_360(SingleStageDetectorRbbox):
+class RetinaNetRbbox_360(SingleStageDetectorRbbox_360):
 
     def __init__(self,
                  backbone,
