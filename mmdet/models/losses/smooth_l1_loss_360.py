@@ -63,5 +63,4 @@ class SmoothL1Loss_360(nn.Module):
             weight[:, 4],
             reduction=reduction,
             avg_factor=avg_factor)
-        print('loss_bbox: ', loss_bbox, ', loss_angle: ', loss_angle)
         return loss_bbox + loss_angle
