@@ -127,11 +127,14 @@ def anchor_target_rbbox_360_single(flat_anchors,
     anchors = flat_anchors[inside_flags, :]
 
     gt_obbs = gt_mask_bp_obbs_360(gt_masks, with_module)
-    xmin = gt_obbs[..., 2] - gt_obbs[..., 0] / 2
-    ymin = gt_obbs[..., 3] - gt_obbs[..., 1] / 2
-    xmax = gt_obbs[..., 2] + gt_obbs[..., 0] / 2
-    ymax = gt_obbs[..., 3] + gt_obbs[..., 1] / 2
-    if np.any(xmin < 0) or np.any(ymin < 0) or np.any(xmax >= 1024) or np.any(ymax >= 1024):
+    w = gt_obbs[..., 2]
+    h = gt_obbs[..., 3]
+    xmin = gt_obbs[..., 0] - w / 2
+    ymin = gt_obbs[..., 1] - h / 2
+    xmax = gt_obbs[..., 0] + w / 2
+    ymax = gt_obbs[..., 1] + h / 2
+    if np.any(xmin < 0) or np.any(ymin < 0) or np.any(xmax >= 1024) or np.any(ymax >= 1024) or \
+            np.any(w<=1) or np.any(h<=1):
         import pdb
         pdb.set_trace()
 
