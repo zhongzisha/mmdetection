@@ -440,7 +440,7 @@ def delta2dbbox_v3_360(Rrois,
 
     # TODO: check the hard code
     # gangle = (2 * np.pi) * dangle + Rroi_angle
-    gangle = dangle + Rroi_angle
+    gangle = (dangle + Rroi_angle) *2*np.pi
     # gangle = gangle % ( 2 * np.pi)
 
     if max_shape is not None:
