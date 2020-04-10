@@ -133,8 +133,8 @@ def anchor_target_rbbox_360_single(flat_anchors,
     ymin = gt_obbs[..., 1] - h / 2
     xmax = gt_obbs[..., 0] + w / 2
     ymax = gt_obbs[..., 1] + h / 2
-    if np.any(xmin < 0) or np.any(ymin < 0) or np.any(xmax >= 1024) or np.any(ymax >= 1024) or \
-            np.any(w<=1) or np.any(h<=1):
+    invalid_indices = np.where((xmin<0) | (ymin<0) | (xmax>=1024) | (ymax>=1024) | (w<=1) | (h<=1))[0]
+    if invalid_indices.size > 0:
         import pdb
         pdb.set_trace()
 
