@@ -36,9 +36,9 @@ model = dict(
             gamma=2.0,
             alpha=0.25,
             loss_weight=1.0),
-        # loss_bbox=dict(type='SmoothL1Loss_360', beta=0.11,
-        #                loss_weight=1.0, angle_loss_weight=1.0)
-        loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0)
+        loss_bbox=dict(type='SmoothL1Loss_360', beta=0.11,
+                       loss_weight=1.0, angle_loss_weight=1.0),
+        # loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
     )
 )
 # training and testing settings
@@ -109,7 +109,7 @@ data = dict(
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 # optimizer
-optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
@@ -131,7 +131,7 @@ log_config = dict(
 total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/retinanet_obb_360_r50_fpn_2x_dota1_lr0.01'
+work_dir = './work_dirs/retinanet_obb_360_r50_fpn_2x_dota1_debug'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
