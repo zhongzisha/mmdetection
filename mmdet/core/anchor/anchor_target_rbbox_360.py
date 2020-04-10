@@ -138,8 +138,6 @@ def anchor_target_rbbox_360_single(flat_anchors,
     gt_obbs = gt_obbs[valid_indices]
     gt_masks = gt_masks[valid_indices]
     gt_labels = gt_labels[valid_indices]
-    import pdb
-    pdb.set_trace()
 
     if sampling:
         assign_result, sampling_result = assign_and_sample(
