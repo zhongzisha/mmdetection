@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from ..registry import LOSSES
 from .utils import weighted_loss
-
+import numpy as np
 
 @weighted_loss
 def smooth_l1_loss(pred, target, beta=1.0):
@@ -22,7 +22,9 @@ def mse_loss(pred, target):
 
 
 def cos_loss(pred, target, weight=None, reduction='none', avg_factor=1.):
-    loss = torch.cos(target - pred)
+    target = target * 2 * np.pi
+    pred = pred * 2 * np.pi
+    loss = 1-torch.cos(target - pred)
     if weight is not None:
         loss = loss * weight
     loss = loss.sum() / avg_factor
@@ -32,11 +34,13 @@ def cos_loss(pred, target, weight=None, reduction='none', avg_factor=1.):
 @LOSSES.register_module
 class SmoothL1Loss_360(nn.Module):
 
-    def __init__(self, beta=1.0, reduction='mean', loss_weight=1.0, angle_loss_weight=1.0):
+    def __init__(self, beta=1.0, reduction='mean', loss_weight=1.0,
+                 angle_loss_type='mse', angle_loss_weight=1.0):
         super(SmoothL1Loss_360, self).__init__()
         self.beta = beta
         self.reduction = reduction
         self.loss_weight = loss_weight
+        self.angle_loss_type = angle_loss_type
         self.angle_loss_weight = angle_loss_weight
 
     def forward(self,
@@ -57,10 +61,19 @@ class SmoothL1Loss_360(nn.Module):
             reduction=reduction,
             avg_factor=avg_factor,
             **kwargs)
-        loss_angle = self.angle_loss_weight * mse_loss(
-            pred[:, 4],
-            target[:, 4],
-            weight[:, 4],
-            reduction=reduction,
-            avg_factor=avg_factor)
+        if self.angle_loss_type == 'mse':
+            loss_angle = self.angle_loss_weight * mse_loss(
+                pred[:, 4],
+                target[:, 4],
+                weight[:, 4],
+                reduction=reduction,
+                avg_factor=avg_factor)
+        else:
+            loss_angle = self.angle_loss_weight * cos_loss(
+                pred[:, 4],
+                target[:, 4],
+                weight[:, 4],
+                reduction=reduction,
+                avg_factor=avg_factor
+            )
         return loss_bbox + loss_angle
