@@ -22,8 +22,10 @@ def mse_loss(pred, target):
 
 
 @weighted_loss
-def cos_loss(pred, target):
-    return F.cosine_similarity(pred, target, reduction='none')
+def cos_loss(pred, target, avg_factor=1.):
+    loss = torch.cos(target - pred)
+    loss = loss.sum() / avg_factor
+    return loss
 
 
 @LOSSES.register_module
@@ -58,7 +60,5 @@ class SmoothL1Loss_360(nn.Module):
             pred[:, 4],
             target[:, 4],
             weight[:, 4],
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+            avg_factor=avg_factor)
         return loss_bbox + loss_angle
