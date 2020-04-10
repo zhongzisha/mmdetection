@@ -66,12 +66,12 @@ class RetinaHeadRbbox_360(AnchorHeadRbbox_360):
 
     def init_weights(self):
         for m in self.cls_convs:
-            normal_init(m.conv, std=0.01)
+            normal_init(m.conv, std=0.01, bias=0)
         for m in self.reg_convs:
-            normal_init(m.conv, std=0.01)
+            normal_init(m.conv, std=0.01, bias=0)
         bias_cls = bias_init_with_prob(0.01)
         normal_init(self.retina_cls, std=0.01, bias=bias_cls)
-        normal_init(self.retina_reg, std=0.01)
+        normal_init(self.retina_reg, std=0.01, bias=0)
 
     def forward_single(self, x):
         cls_feat = x

@@ -58,8 +58,7 @@ test_cfg = dict(
 # dataset settings
 # dataset settings
 dataset_type = 'DOTADataset'
-# data_root = 'data/dota1_1024/'
-data_root = 'data/dota1_1024_mini/'   # for debug
+data_root = 'data/dota1_1024/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -119,7 +118,7 @@ lr_config = dict(
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')

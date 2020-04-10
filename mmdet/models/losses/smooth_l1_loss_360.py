@@ -21,6 +21,11 @@ def mse_loss(pred, target):
     return F.mse_loss(pred, target, reduction='none')
 
 
+@weighted_loss
+def cos_loss(pred, target):
+    return F.cosine_similarity(pred, target, reduction='none')
+
+
 @LOSSES.register_module
 class SmoothL1Loss_360(nn.Module):
 
@@ -49,15 +54,11 @@ class SmoothL1Loss_360(nn.Module):
             reduction=reduction,
             avg_factor=avg_factor,
             **kwargs)
-        loss_angle = self.angle_loss_weight * mse_loss(
+        loss_angle = self.angle_loss_weight * cos_loss(
             pred[:, 4],
             target[:, 4],
             weight[:, 4],
             reduction=reduction,
             avg_factor=avg_factor,
             **kwargs)
-        print(pred)
-        if torch.isnan(loss_bbox) or torch.isnan(loss_angle):
-            import pdb
-            pdb.set_trace()
         return loss_bbox + loss_angle
