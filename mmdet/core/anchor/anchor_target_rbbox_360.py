@@ -158,7 +158,11 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # implementation B
     gt_obbs = gt_mask_bp_obbs_360(gt_masks, with_module)
     gt_obbs_ts = torch.from_numpy(gt_obbs).to(sampling_result.pos_bboxes.device)
-    if torch.any(gt_obbs_ts < 0):
+    xmin = gt_obbs_ts[..., 2] - gt_obbs_ts[..., 0]/2
+    ymin = gt_obbs_ts[..., 3] - gt_obbs_ts[..., 1]/2
+    xmax = gt_obbs_ts[..., 2] + gt_obbs_ts[..., 0]/2
+    ymax = gt_obbs_ts[..., 3] + gt_obbs_ts[..., 1]/2
+    if torch.any(xmin < 0) or torch.any(ymin < 0) or torch.any(xmax >= 1024) or torch.any(ymax >= 1024):
         import pdb
         pdb.set_trace()
     pos_gt_obbs_ts = gt_obbs_ts[pos_assigned_gt_inds]
