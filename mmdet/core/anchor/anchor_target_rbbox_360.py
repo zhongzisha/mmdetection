@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 from ..bbox import assign_and_sample, build_assigner, \
     PseudoSampler, bbox2delta, dbbox2delta_360, dbbox2delta_v3_360, hbb2obb_v2_360
@@ -125,6 +126,15 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # pdb.set_trace()
     anchors = flat_anchors[inside_flags, :]
 
+    gt_obbs = gt_mask_bp_obbs_360(gt_masks, with_module)
+    xmin = gt_obbs[..., 2] - gt_obbs[..., 0] / 2
+    ymin = gt_obbs[..., 3] - gt_obbs[..., 1] / 2
+    xmax = gt_obbs[..., 2] + gt_obbs[..., 0] / 2
+    ymax = gt_obbs[..., 3] + gt_obbs[..., 1] / 2
+    if np.any(xmin < 0) or np.any(ymin < 0) or np.any(xmax >= 1024) or np.any(ymax >= 1024):
+        import pdb
+        pdb.set_trace()
+
     if sampling:
         assign_result, sampling_result = assign_and_sample(
             anchors, gt_bboxes, gt_bboxes_ignore, None, cfg)
@@ -156,15 +166,8 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # pos_gt_obbs = gt_mask_bp_obbs(pos_gt_masks)
     # pos_gt_obbs_ts = torch.from_numpy(pos_gt_obbs).to(sampling_result.pos_bboxes.device)
     # implementation B
-    gt_obbs = gt_mask_bp_obbs_360(gt_masks, with_module)
+
     gt_obbs_ts = torch.from_numpy(gt_obbs).to(sampling_result.pos_bboxes.device)
-    xmin = gt_obbs_ts[..., 2] - gt_obbs_ts[..., 0]/2
-    ymin = gt_obbs_ts[..., 3] - gt_obbs_ts[..., 1]/2
-    xmax = gt_obbs_ts[..., 2] + gt_obbs_ts[..., 0]/2
-    ymax = gt_obbs_ts[..., 3] + gt_obbs_ts[..., 1]/2
-    if torch.any(xmin < 0) or torch.any(ymin < 0) or torch.any(xmax >= 1024) or torch.any(ymax >= 1024):
-        import pdb
-        pdb.set_trace()
     pos_gt_obbs_ts = gt_obbs_ts[pos_assigned_gt_inds]
     if len(pos_inds) > 0:
         # pos_bbox_targets = bbox2delta(sampling_result.pos_bboxes,
