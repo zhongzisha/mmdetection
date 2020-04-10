@@ -158,6 +158,9 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # implementation B
     gt_obbs = gt_mask_bp_obbs_360(gt_masks, with_module)
     gt_obbs_ts = torch.from_numpy(gt_obbs).to(sampling_result.pos_bboxes.device)
+    if torch.any(gt_obbs_ts < 0):
+        import pdb
+        pdb.set_trace()
     pos_gt_obbs_ts = gt_obbs_ts[pos_assigned_gt_inds]
     if len(pos_inds) > 0:
         # pos_bbox_targets = bbox2delta(sampling_result.pos_bboxes,
