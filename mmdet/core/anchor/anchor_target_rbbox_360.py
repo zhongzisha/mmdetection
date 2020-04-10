@@ -133,10 +133,13 @@ def anchor_target_rbbox_360_single(flat_anchors,
     ymin = gt_obbs[..., 1] - h / 2
     xmax = gt_obbs[..., 0] + w / 2
     ymax = gt_obbs[..., 1] + h / 2
-    invalid_indices = np.where((xmin<0) | (ymin<0) | (xmax>=1024) | (ymax>=1024) | (w<=1) | (h<=1))[0]
-    if invalid_indices.size > 0:
-        import pdb
-        pdb.set_trace()
+    valid_indices = np.where((xmin>=0) & (ymin>=0) & (xmax<1024) & (ymax<1024) & (w>1) & (h>1))[0]
+    gt_bboxes = gt_bboxes[valid_indices]
+    gt_obbs = gt_obbs[valid_indices]
+    gt_masks = gt_masks[valid_indices]
+    gt_labels = gt_labels[valid_indices]
+    import pdb
+    pdb.set_trace()
 
     if sampling:
         assign_result, sampling_result = assign_and_sample(
