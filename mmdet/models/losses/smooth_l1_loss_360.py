@@ -22,8 +22,8 @@ def mse_loss(pred, target):
 
 
 def cos_loss(pred, target, weight=None, reduction='none', avg_factor=1.):
-    target = target * 2 * np.pi
-    pred = pred * 2 * np.pi
+    target = target * torch.tensor(2 * np.pi)
+    pred = pred * torch.tensor(2 * np.pi)
     loss = torch.tensor(1.)-torch.cos(target - pred)
     if weight is not None:
         loss = loss * weight
