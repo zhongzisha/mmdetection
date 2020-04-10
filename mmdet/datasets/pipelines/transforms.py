@@ -7,6 +7,8 @@ from numpy import random
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from ..registry import PIPELINES
 
+from mmdet.core.bbox import polygonToRotRectangle_batch_360
+
 try:
     from imagecorruptions import corrupt
 except ImportError:
@@ -938,4 +940,48 @@ class Albu(object):
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += '(transforms={})'.format(self.transforms)
+        return repr_str
+
+
+@PIPELINES.register_module
+class FilterBoxes_360(object):
+    """
+    filter some invalid boxes
+    """
+
+    def __init__(self, min_size=1):
+        # 1: return ori img
+        self.min_size = min_size
+
+    def __call__(self, results):
+        img, boxes, labels, masks = [
+            results[k] for k in ('img', 'gt_bboxes', 'gt_labels', 'gt_masks')
+        ]
+        im_height, im_width = img.shape[:2]
+        obbs = polygonToRotRectangle_batch_360(masks)
+        w = obbs[..., 2]
+        h = obbs[..., 3]
+        xmin = obbs[..., 0] - w / 2
+        ymin = obbs[..., 1] - h / 2
+        xmax = obbs[..., 0] + w / 2
+        ymax = obbs[..., 1] + h / 2
+        valid_indices = np.where((xmin >= 0) &
+                                 (ymin >= 0) &
+                                 (xmax < im_width) &
+                                 (ymax < im_height) &
+                                 (w > self.min_size) &
+                                 (h > self.min_size))[0]
+        gt_bboxes = boxes[valid_indices]
+        gt_obbs = obbs[valid_indices]
+        gt_masks = masks[valid_indices]
+        gt_labels = labels[valid_indices]
+        results['gt_bboxes'] = gt_bboxes
+        results['gt_obbs'] = gt_obbs
+        results['gt_masks'] = gt_masks
+        results['gt_labels'] = gt_labels
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += '(min_size={})'.format(self.min_size)
         return repr_str
