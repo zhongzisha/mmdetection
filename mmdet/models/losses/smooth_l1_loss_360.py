@@ -62,9 +62,9 @@ class SmoothL1Loss_360(nn.Module):
             avg_factor=avg_factor,
             **kwargs)
         if self.angle_loss_type == 'mse':
-            loss_angle = F.mse_loss(pred, target, reduction='sum') / avg_factor
+            loss_angle = F.mse_loss(pred[:, 4], target[:, 4], reduction='sum') / avg_factor
             if weight is not None:
-                loss_angle = loss_angle * weight
+                loss_angle = loss_angle * weight[:, 4]
         else:
             loss_angle = self.angle_loss_weight * cos_loss(
                 pred[:, 4],
