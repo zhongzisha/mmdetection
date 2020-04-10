@@ -21,7 +21,6 @@ def mse_loss(pred, target):
     return F.mse_loss(pred, target, reduction='none')
 
 
-@weighted_loss
 def cos_loss(pred, target, weight=None, avg_factor=1.):
     import pdb
     pdb.set_trace()
@@ -63,6 +62,6 @@ class SmoothL1Loss_360(nn.Module):
         loss_angle = self.angle_loss_weight * cos_loss(
             pred[:, 4],
             target[:, 4],
-            weight[:, 4],
+            weight=weight[:, 4],
             avg_factor=avg_factor)
         return loss_bbox + loss_angle
