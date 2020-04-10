@@ -23,6 +23,8 @@ def mse_loss(pred, target):
 
 @weighted_loss
 def cos_loss(pred, target, weight=None, avg_factor=1.):
+    import pdb
+    pdb.set_trace()
     loss = torch.cos(target - pred)
     if weight is not None:
         loss = loss * weight
