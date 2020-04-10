@@ -4,9 +4,11 @@ import math
 import DOTA_devkit.polyiou as polyiou
 import pdb
 
+
 def pesudo_nms_poly(dets, iou_thr):
     keep = torch.range(0, len(dets))
     return dets, keep
+
 
 def py_cpu_nms_poly_fast(dets, iou_thr):
     # TODO: check the type numpy()
@@ -87,6 +89,7 @@ def py_cpu_nms_poly_fast(dets, iou_thr):
             # order = np.concatenate((order_obb, order_hbb), axis=0).astype(np.int)
 
     return torch.from_numpy(dets[keep, :]).to(device), torch.from_numpy(np.array(keep)).to(device)
+
 
 def py_cpu_nms_poly_fast_np(dets, thresh):
     try:
@@ -188,6 +191,7 @@ def py_cpu_nms(dets, thresh):
 
     return keep
 
+
 def bbox_poly2hbb(boxes):
     """
     with label
@@ -206,6 +210,7 @@ def bbox_poly2hbb(boxes):
     hbbs[:, 3] = np.max(ys, axis=1)
     hbbs = np.hstack((hbbs, boxes[:, -1, np.newaxis]))
     return hbbs
+
 
 def obb_HNMS(dets, iou_thr=0.5):
     """
@@ -231,6 +236,7 @@ def obb_HNMS(dets, iou_thr=0.5):
         keep = py_cpu_nms(h_dets, iou_thr)
 
     return torch.from_numpy(dets[keep, :]).to(device), torch.from_numpy(np.array(keep)).to(device)
+
 
 def obb_hybrid_NMS(dets, thresh_hbb=0.5, thresh_obb=0.3):
     """
