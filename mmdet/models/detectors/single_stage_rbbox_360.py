@@ -79,7 +79,7 @@ class SingleStageDetectorRbbox_360(BaseDetectorNew):
                         pdb.set_trace()
         if self.with_rbbox:
             rbbox_outs = self.rbbox_head(x)
-            rbbox_loss_inputs = rbbox_outs + (gt_bboxes, gt_quads, gt_masks, gt_labels, img_metas, self.train_cfg)
+            rbbox_loss_inputs = rbbox_outs + (gt_bboxes, gt_quads, gt_labels, img_metas, self.train_cfg)
             rbbox_losses = self.rbbox_head.loss(
                 *rbbox_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rbbox_losses)
