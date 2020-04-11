@@ -55,7 +55,8 @@ class SingleStageDetectorRbbox_360(BaseDetectorNew):
                 img,
                 img_metas,
                 gt_bboxes,
-                      gt_obbs,
+                gt_obbs,
+                      gt_quads,
                 gt_masks,
                 gt_labels,
                 gt_bboxes_ignore=None):
