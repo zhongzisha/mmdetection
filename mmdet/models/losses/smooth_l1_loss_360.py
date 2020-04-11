@@ -99,7 +99,4 @@ class SmoothL1Loss_360(nn.Module):
         else:
             raise ValueError('Error angle loss type')
 
-        import pdb
-        pdb.set_trace()
-
         return loss_bbox + loss_angle
