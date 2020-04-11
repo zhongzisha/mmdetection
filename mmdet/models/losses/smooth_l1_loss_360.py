@@ -98,6 +98,4 @@ class SmoothL1Loss_360(nn.Module):
         else:
             raise ValueError('Error angle loss type')
 
-        print('loss_bbox:', loss_bbox)
-        print('loss_angle:', loss_angle)
         return loss_bbox + loss_angle
