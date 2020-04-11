@@ -83,18 +83,18 @@ class SingleStageDetectorRbbox_360(BaseDetectorNew):
             rbbox_losses = self.rbbox_head.loss(
                 *rbbox_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rbbox_losses)
-            for key in rbbox_losses:
-                for x in rbbox_losses[key]:
-                    if torch.isnan(x):
-                        import pdb
-                        pdb.set_trace()
+            # for key in rbbox_losses:
+            #     for x in rbbox_losses[key]:
+            #         if torch.isnan(x):
+            #             import pdb
+            #             pdb.set_trace()
 
-        # print('losses', losses)
-        for key in losses.keys():
-            for x in losses[key]:
-                if torch.isnan(x):
-                    import pdb
-                    pdb.set_trace()
+        # # print('losses', losses)
+        # for key in losses.keys():
+        #     for x in losses[key]:
+        #         if torch.isnan(x):
+        #             import pdb
+        #             pdb.set_trace()
 
         return losses
 
