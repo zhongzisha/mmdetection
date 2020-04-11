@@ -29,6 +29,16 @@ def smooth_l1_loss_for_angle(pred, target, beta=np.pi/2):
 
 
 @weighted_loss
+def smooth_l1_loss_for_angle2(pred, target, beta=np.pi/2):
+    # bad
+    assert pred.size() == target.size() and target.numel() > 0
+    diff = torch.abs(pred - target) - torch.tensor(np.pi)   # [-2pi ~ 2pi] --> [0, 2pi] --> [-pi, pi]
+    loss = torch.where(diff < beta, 0.5 * diff * diff / beta,
+                       diff - 0.5 * beta)
+    return -loss
+
+
+@weighted_loss
 def mse_loss(pred, target):
     return F.mse_loss(pred, target, reduction='none')
 
@@ -80,6 +90,14 @@ class SmoothL1Loss_360(nn.Module):
                 avg_factor=avg_factor)
         elif self.angle_loss_type == 'smooth_l1_loss_for_angle':
             loss_angle = self.angle_loss_weight * smooth_l1_loss_for_angle(
+                pred[:, 4],
+                target[:, 4],
+                weight[:, 4],
+                reduction=reduction,
+                avg_factor=avg_factor
+            )
+        elif self.angle_loss_type == 'smooth_l1_loss_for_angle2':
+            loss_angle = self.angle_loss_weight * smooth_l1_loss_for_angle2(
                 pred[:, 4],
                 target[:, 4],
                 weight[:, 4],
