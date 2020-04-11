@@ -73,7 +73,7 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle_360'),
-    dict(type='Collect_360', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks', 'gt_quads']),
+    dict(type='Collect_360', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_quads']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),

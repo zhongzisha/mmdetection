@@ -11,7 +11,6 @@ def anchor_target_rbbox_360(anchor_list,
                             valid_flag_list,
                             gt_bboxes_list,
                             gt_quads_list,
-                            gt_masks_list,
                   img_metas,
                   target_means,
                   target_stds,
@@ -60,7 +59,6 @@ def anchor_target_rbbox_360(anchor_list,
          valid_flag_list,
          gt_bboxes_list,
          gt_quads_list,
-         gt_masks_list,
          gt_bboxes_ignore_list,
          gt_labels_list,
          img_metas,
@@ -106,7 +104,6 @@ def anchor_target_rbbox_360_single(flat_anchors,
                          valid_flags,
                          gt_bboxes,
                          gt_quads,
-                         gt_masks,
                          gt_bboxes_ignore,
                          gt_labels,
                          img_meta,
@@ -140,7 +137,6 @@ def anchor_target_rbbox_360_single(flat_anchors,
     valid_indices = np.where((xmin>=0) & (ymin>=0) & (xmax<img_shape[1]) & (ymax<img_shape[0]) & (w>1) & (h>1))[0]
     gt_bboxes = gt_bboxes[valid_indices]
     gt_obbs = gt_obbs[valid_indices]
-    gt_quads = gt_masks[valid_indices]
     gt_labels = gt_labels[valid_indices]
 
     if sampling:
