@@ -328,7 +328,7 @@ def dbbox2delta_v3_360(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1,
     # pdb.set_trace()
     # dangle = (gt_angle - proposals_angle) % (2 * math.pi) / (2 * math.pi)
     # TODO: debug for it, proposals_angle are -1.5708, gt_angle should close to -1.57, actully they close to 5.0153
-    dangle = (gt_angle - proposals_angle) / (2*np.pi)
+    dangle = gt_angle - proposals_angle
     deltas = torch.stack((dx, dy, dw, dh, dangle), -1)
 
     means = deltas.new_tensor(means).unsqueeze(0)
@@ -440,7 +440,7 @@ def delta2dbbox_v3_360(Rrois,
 
     # TODO: check the hard code
     # gangle = (2 * np.pi) * dangle + Rroi_angle
-    gangle = dangle *2*np.pi + Rroi_angle
+    gangle = dangle + Rroi_angle
     # gangle = gangle % ( 2 * np.pi)
 
     if max_shape is not None:

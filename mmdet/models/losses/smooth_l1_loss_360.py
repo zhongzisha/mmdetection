@@ -6,6 +6,7 @@ from ..registry import LOSSES
 from .utils import weighted_loss
 import numpy as np
 
+
 @weighted_loss
 def smooth_l1_loss(pred, target, beta=1.0):
     assert beta > 0
@@ -13,6 +14,18 @@ def smooth_l1_loss(pred, target, beta=1.0):
     diff = torch.abs(pred - target)
     loss = torch.where(diff < beta, 0.5 * diff * diff / beta,
                        diff - 0.5 * beta)
+    return loss
+
+
+@weighted_loss
+def smooth_l1_loss_for_angle(pred, target):
+    assert pred.size() == target.size() and target.numel() > 0
+    diff1 = torch.abs(pred - target) - torch.tensor(np.pi)
+    diff = torch.abs(diff1)
+    delta = np.pi / 2
+    loss = torch.where(diff < delta, 0.5 * diff * diff,
+                       delta * (diff - 0.5 * delta))
+    loss = torch.tensor(3*(np.pi**2)/8) - loss
     return loss
 
 
@@ -68,7 +81,15 @@ class SmoothL1Loss_360(nn.Module):
                 weight[:, 4],
                 reduction=reduction,
                 avg_factor=avg_factor)
-        else:
+        elif self.angle_loss_type == 'smooth_l1_loss_for_angle':
+            loss_angle = self.angle_loss_weight * smooth_l1_loss_for_angle(
+                pred[:, 4],
+                target[:, 4],
+                weight[:, 4],
+                reduction=reduction,
+                avg_factor=avg_factor
+            )
+        elif self.angle_loss_type == 'cosine':
             loss_angle = self.angle_loss_weight * cos_loss(
                 pred[:, 4],
                 target[:, 4],
@@ -76,4 +97,7 @@ class SmoothL1Loss_360(nn.Module):
                 reduction=reduction,
                 avg_factor=avg_factor
             )
+        else:
+            raise ValueError('Error angle loss type')
+
         return loss_bbox + loss_angle
