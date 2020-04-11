@@ -38,8 +38,7 @@ def mse_loss(pred, target):
 @weighted_loss
 def cosine_loss(pred, target):
     diff1 = torch.abs(pred - target)
-    diff1 = torch.where(diff1 >= 1.5 * np.pi, 2 * np.pi - diff1, diff1)
-    diff1 = torch.where(diff1 >= np.pi, diff1 - np.pi / 2, diff1)
+    diff1 = torch.where(diff1 >= np.pi, 2 * np.pi - diff1, diff1)
     loss = torch.tensor(1.0) - torch.cos(diff1)
     return loss
 
