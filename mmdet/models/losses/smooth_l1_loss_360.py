@@ -43,13 +43,6 @@ def cosine_loss(pred, target):
     return loss
 
 
-@weighted_loss
-def direct_loss(pred, target):
-    diff1 = torch.abs(pred - target)
-    loss = torch.where(diff1 >= np.pi, 2 * np.pi - diff1, diff1)  # 0~pi
-    return loss
-
-
 @LOSSES.register_module
 class SmoothL1Loss_360(nn.Module):
 
@@ -97,14 +90,6 @@ class SmoothL1Loss_360(nn.Module):
             )
         elif self.angle_loss_type == 'cosine':
             loss_angle = self.angle_loss_weight * cosine_loss(
-                pred[:, 4],
-                target[:, 4],
-                weight[:, 4],
-                reduction=reduction,
-                avg_factor=avg_factor
-            )
-        elif self.angle_loss_type == 'direct':
-            loss_angle = self.angle_loss_weight * direct_loss(
                 pred[:, 4],
                 target[:, 4],
                 weight[:, 4],
