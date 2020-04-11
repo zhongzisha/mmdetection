@@ -37,8 +37,8 @@ model = dict(
             alpha=0.25,
             loss_weight=1.0),
         loss_bbox=dict(type='SmoothL1Loss_360', beta=0.11,
-                       loss_weight=1.0, angle_loss_weight=0.5,
-                       angle_loss_type='smooth_l1_loss_for_angle'),
+                       loss_weight=1.0, angle_loss_weight=1.0,
+                       angle_loss_type='smooth_l1_loss_for_angle2'),
         # loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
     )
 )
