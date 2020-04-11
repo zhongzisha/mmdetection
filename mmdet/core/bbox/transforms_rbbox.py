@@ -419,9 +419,9 @@ def delta2dbbox_v3_360(Rrois,
     dh = denorm_deltas[:, 3::5]
     dangle = denorm_deltas[:, 4::5]
 
-    max_ratio = np.abs(np.log(wh_ratio_clip))
-    dw = dw.clamp(min=-max_ratio, max=max_ratio)
-    dh = dh.clamp(min=-max_ratio, max=max_ratio)
+    # max_ratio = np.abs(np.log(wh_ratio_clip))
+    # dw = dw.clamp(min=-max_ratio, max=max_ratio)
+    # dh = dh.clamp(min=-max_ratio, max=max_ratio)
     Rroi_x = (Rrois[:, 0]).unsqueeze(1).expand_as(dx)
     Rroi_y = (Rrois[:, 1]).unsqueeze(1).expand_as(dy)
     Rroi_w = (Rrois[:, 2]).unsqueeze(1).expand_as(dw)
