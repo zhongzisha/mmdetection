@@ -21,8 +21,7 @@ def smooth_l1_loss(pred, target, beta=1.0):
 def smooth_l1_loss_for_angle(pred, target):
     # bad
     assert pred.size() == target.size() and target.numel() > 0
-    diff1 = torch.abs(pred - target) - torch.tensor(np.pi)
-    diff = torch.abs(diff1)
+    diff = torch.abs(pred - target) - torch.tensor(np.pi)   # [-2pi ~ 2pi] --> [0, 2pi] --> [-pi, pi]
     delta = np.pi / 2
     loss = torch.where(diff < delta, 0.5 * diff * diff,
                        delta * (diff - 0.5 * delta))
