@@ -154,7 +154,7 @@ class DefaultFormatBundle_360(object):
     - gt_masks: (1)to tensor, (2)to DataContainer (cpu_only=True)
     - gt_semantic_seg: (1)unsqueeze dim-0 (2)to tensor,
                        (3)to DataContainer (stack=True)
-    - gt_obbs: (1)to tensor, (2) to DataContainer
+    - gt_quads: (1)to tensor, (2) to DataContainer
     """
 
     def __call__(self, results):
@@ -164,7 +164,7 @@ class DefaultFormatBundle_360(object):
                 img = np.expand_dims(img, -1)
             img = np.ascontiguousarray(img.transpose(2, 0, 1))
             results['img'] = DC(to_tensor(img), stack=True)
-        for key in ['proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels', 'gt_obbs']:
+        for key in ['proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels', 'gt_quads', 'gt_obbs']:
             if key not in results:
                 continue
             results[key] = DC(to_tensor(results[key]))

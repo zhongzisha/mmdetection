@@ -147,7 +147,7 @@ class Resize(object):
             if results[key] is None:
                 continue
             if self.keep_ratio:
-                if results['gt_masks_is_image']:
+                if key == 'gt_masks':
                     masks = [
                         mmcv.imrescale(
                             mask, results['scale_factor'], interpolation='nearest')
@@ -158,14 +158,14 @@ class Resize(object):
                     else:
                         results[key] = np.empty(
                             (0,) + results['img_shape'], dtype=np.uint8)
-                else:
+                elif key == 'gt_quads':
                     scale_factor= results['scale_factor']
-                    masks = np.array(results[key]).astype(np.float32)
-                    masks[..., [0, 2, 4, 6]] *= scale_factor
-                    masks[..., [1, 3, 5, 7]] *= scale_factor
-                    results[key] = masks.reshape((-1, 8))
+                    quads = np.array(results[key]).astype(np.float32)
+                    quads[..., [0, 2, 4, 6]] *= scale_factor
+                    quads[..., [1, 3, 5, 7]] *= scale_factor
+                    results[key] = quads.reshape((-1, 8))
             else:
-                if results['gt_masks_is_image']:
+                if key == 'gt_masks':
                     mask_size = (results['img_shape'][1], results['img_shape'][0])  # h,w
                     masks = [
                         mmcv.imresize(mask, mask_size, interpolation='nearest')
@@ -176,12 +176,12 @@ class Resize(object):
                     else:
                         results[key] = np.empty(
                             (0, ) + results['img_shape'], dtype=np.uint8)
-                else:
+                elif key == 'gt_quads':
                     w_scale, h_scale = results['scale_factor'][0:2]
-                    masks = np.array(results[key]).astype(np.float32)
-                    masks[:, [0, 2, 4, 6]] *= w_scale
-                    masks[:, [1, 3, 5, 7]] *= h_scale
-                    results[key] = masks.reshape((-1, 8))
+                    quads = np.array(results[key]).astype(np.float32)
+                    quads[:, [0, 2, 4, 6]] *= w_scale
+                    quads[:, [1, 3, 5, 7]] *= h_scale
+                    results[key] = quads.reshape((-1, 8))
 
     def _resize_seg(self, results):
         for key in results.get('seg_fields', []):
@@ -270,7 +270,7 @@ class RandomFlip(object):
                                               results['flip_direction'])
             # flip masks
             for key in results.get('mask_fields', []):
-                if results['gt_masks_is_image']:
+                if key == 'gt_masks':
                     masks = [
                         mmcv.imflip(mask, direction=results['flip_direction'])
                         for mask in results[key]
@@ -280,20 +280,20 @@ class RandomFlip(object):
                     else:
                         results[key] = np.empty(
                             (0, ) + results['img_shape'], dtype=np.uint8)
-                else:
+                elif key == 'gt_quads':
                     img_shape = results['img_shape']
-                    masks = np.array(results[key]).astype(np.float32)
+                    quads = np.array(results[key]).astype(np.float32)
                     if results['flip_direction'] == 'horizontal':
                         w = img_shape[1]
-                        masks[..., 0::2] = w - masks[..., 0::2] - 1
+                        quads[..., 0::2] = w - quads[..., 0::2] - 1
                     elif results['flip_direction'] == 'vertical':
                         h = img_shape[0]
-                        masks[..., 1::2] = h - masks[..., 1::2] - 1
+                        quads[..., 1::2] = h - quads[..., 1::2] - 1
                     else:
                         raise ValueError(
                             'Invalid flipping direction "{}"'.format(results['flip_direction'])
                         )
-                    results[key] = masks.reshape((-1, 8))
+                    results[key] = quads.reshape((-1, 8))
 
             # flip segs
             for key in results.get('seg_fields', []):
@@ -341,7 +341,7 @@ class Pad(object):
     def _pad_masks(self, results):
         pad_shape = results['pad_shape'][:2]
         for key in results.get('mask_fields', []):
-            if results['gt_masks_is_image']:
+            if key == 'gt_masks':
                 padded_masks = [
                     mmcv.impad(mask, pad_shape, pad_val=self.pad_val)
                     for mask in results[key]
@@ -350,7 +350,7 @@ class Pad(object):
                     results[key] = np.stack(padded_masks, axis=0)
                 else:
                     results[key] = np.empty((0, ) + pad_shape, dtype=np.uint8)
-            else:
+            elif key == 'gt_quads':
                 results[key] = np.array(results[key])
 
     def _pad_seg(self, results):
@@ -954,11 +954,11 @@ class FilterBoxes_360(object):
         self.min_size = min_size
 
     def __call__(self, results):
-        img, boxes, labels, masks = [
-            results[k] for k in ('img', 'gt_bboxes', 'gt_labels', 'gt_masks')
+        img, boxes, labels, masks, quads = [
+            results[k] for k in ('img', 'gt_bboxes', 'gt_labels', 'gt_masks', 'gt_quads')
         ]
         im_height, im_width = img.shape[:2]
-        obbs = polygonToRotRectangle_batch_360(masks)
+        obbs = polygonToRotRectangle_batch_360(quads)
         w = obbs[..., 2]
         h = obbs[..., 3]
         xmin = obbs[..., 0] - w / 2
@@ -973,9 +973,11 @@ class FilterBoxes_360(object):
                                  (h > self.min_size))[0]
         gt_bboxes = boxes[valid_indices]
         gt_obbs = obbs[valid_indices]
+        gt_quads = quads[valid_indices]
         gt_masks = masks[valid_indices]
         gt_labels = labels[valid_indices]
         results['gt_bboxes'] = gt_bboxes
+        results['gt_quads'] = gt_quads
         results['gt_obbs'] = gt_obbs
         results['gt_masks'] = gt_masks
         results['gt_labels'] = gt_labels
