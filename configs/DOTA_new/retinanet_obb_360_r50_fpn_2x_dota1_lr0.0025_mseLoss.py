@@ -37,7 +37,7 @@ model = dict(
             alpha=0.25,
             loss_weight=1.0),
         loss_bbox=dict(type='SmoothL1Loss_360', beta=0.11,
-                       loss_weight=1.0, angle_loss_weight=1.0,
+                       loss_weight=1.0, angle_loss_weight=0.1,
                        angle_loss_type='mse'),
         # loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
     )
@@ -122,7 +122,7 @@ lr_config = dict(
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
-    interval=20,
+    interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
