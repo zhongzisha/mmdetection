@@ -10,7 +10,7 @@ from mmdet.core.bbox.transforms_rbbox import gt_mask_bp_obbs_360
 def anchor_target_rbbox_360(anchor_list,
                             valid_flag_list,
                             gt_bboxes_list,
-                            gt_obbs_list,
+                            gt_quads_list,
                             gt_masks_list,
                   img_metas,
                   target_means,
@@ -59,7 +59,7 @@ def anchor_target_rbbox_360(anchor_list,
          anchor_list,
          valid_flag_list,
          gt_bboxes_list,
-         gt_obbs_list,
+         gt_quads_list,
          gt_masks_list,
          gt_bboxes_ignore_list,
          gt_labels_list,
@@ -105,7 +105,7 @@ def images_to_levels(target, num_level_anchors):
 def anchor_target_rbbox_360_single(flat_anchors,
                          valid_flags,
                          gt_bboxes,
-                         gt_obbs,
+                         gt_quads,
                          gt_masks,
                          gt_bboxes_ignore,
                          gt_labels,
@@ -118,8 +118,9 @@ def anchor_target_rbbox_360_single(flat_anchors,
                          unmap_outputs=True,
                          with_module=True,
                          hbb_trans='hbb2obb_v2'):
+    img_shape = img_meta['img_shape'][:2]
     inside_flags = anchor_inside_flags(flat_anchors, valid_flags,
-                                       img_meta['img_shape'][:2],
+                                       img_shape,
                                        cfg.allowed_border)
     if not inside_flags.any():
         return (None, ) * 6
@@ -129,18 +130,18 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # pdb.set_trace()
     anchors = flat_anchors[inside_flags, :]
 
-    # gt_obbs = gt_mask_bp_obbs_360(gt_masks, with_module)
-    # w = gt_obbs[..., 2]
-    # h = gt_obbs[..., 3]
-    # xmin = gt_obbs[..., 0] - w / 2
-    # ymin = gt_obbs[..., 1] - h / 2
-    # xmax = gt_obbs[..., 0] + w / 2
-    # ymax = gt_obbs[..., 1] + h / 2
-    # valid_indices = np.where((xmin>=0) & (ymin>=0) & (xmax<1024) & (ymax<1024) & (w>1) & (h>1))[0]
-    # gt_bboxes = gt_bboxes[valid_indices]
-    # gt_obbs = gt_obbs[valid_indices]
-    # gt_masks = gt_masks[valid_indices]
-    # gt_labels = gt_labels[valid_indices]
+    gt_obbs = gt_mask_bp_obbs_360(gt_quads, with_module)
+    w = gt_obbs[..., 2]
+    h = gt_obbs[..., 3]
+    xmin = gt_obbs[..., 0] - w / 2
+    ymin = gt_obbs[..., 1] - h / 2
+    xmax = gt_obbs[..., 0] + w / 2
+    ymax = gt_obbs[..., 1] + h / 2
+    valid_indices = np.where((xmin>=0) & (ymin>=0) & (xmax<img_shape[1]) & (ymax<img_shape[0]) & (w>1) & (h>1))[0]
+    gt_bboxes = gt_bboxes[valid_indices]
+    gt_obbs = gt_obbs[valid_indices]
+    gt_quads = gt_masks[valid_indices]
+    gt_labels = gt_labels[valid_indices]
 
     if sampling:
         assign_result, sampling_result = assign_and_sample(
@@ -173,9 +174,8 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # pos_gt_obbs = gt_mask_bp_obbs(pos_gt_masks)
     # pos_gt_obbs_ts = torch.from_numpy(pos_gt_obbs).to(sampling_result.pos_bboxes.device)
     # implementation B
-
-    # gt_obbs_ts = torch.from_numpy(gt_obbs).to(sampling_result.pos_bboxes.device)
-    pos_gt_obbs_ts = gt_obbs[pos_assigned_gt_inds]
+    gt_obbs_ts = torch.from_numpy(gt_obbs).to(sampling_result.pos_bboxes.device)
+    pos_gt_obbs_ts = gt_obbs_ts[pos_assigned_gt_inds]
     if len(pos_inds) > 0:
         # pos_bbox_targets = bbox2delta(sampling_result.pos_bboxes,
         #                               sampling_result.pos_gt_bboxes,

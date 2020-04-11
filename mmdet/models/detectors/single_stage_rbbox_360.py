@@ -52,14 +52,13 @@ class SingleStageDetectorRbbox_360(BaseDetectorNew):
         return x
 
     def forward_train(self,
-                img,
-                img_metas,
-                gt_bboxes,
-                gt_obbs,
+                      img,
+                      img_metas,
+                      gt_bboxes,
                       gt_quads,
-                gt_masks,
-                gt_labels,
-                gt_bboxes_ignore=None):
+                      gt_masks,
+                      gt_labels,
+                      gt_bboxes_ignore=None):
         # print('in single stage rbbox')
         # import pdb
         # pdb.set_trace()
@@ -69,7 +68,7 @@ class SingleStageDetectorRbbox_360(BaseDetectorNew):
 
         if self.with_bbox:
             bbox_outs = self.bbox_head(x)
-            bbox_loss_inputs = bbox_outs + (gt_bboxes, gt_obbs, gt_labels, img_metas, self.train_cfg)
+            bbox_loss_inputs = bbox_outs + (gt_bboxes, gt_quads, gt_labels, img_metas, self.train_cfg)
             # TODO: make if flexible to add the bbox_head
             bbox_losses = self.bbox_head.loss(
                 *bbox_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
@@ -81,7 +80,7 @@ class SingleStageDetectorRbbox_360(BaseDetectorNew):
                         pdb.set_trace()
         if self.with_rbbox:
             rbbox_outs = self.rbbox_head(x)
-            rbbox_loss_inputs = rbbox_outs + (gt_bboxes, gt_obbs, gt_masks, gt_labels, img_metas, self.train_cfg)
+            rbbox_loss_inputs = rbbox_outs + (gt_bboxes, gt_quads, gt_masks, gt_labels, img_metas, self.train_cfg)
             rbbox_losses = self.rbbox_head.loss(
                 *rbbox_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rbbox_losses)
