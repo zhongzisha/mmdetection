@@ -74,7 +74,7 @@ train_pipeline = [
     dict(type='Pad', size_divisor=32),
     dict(type='FilterBoxes_360', min_size=1),
     dict(type='DefaultFormatBundle_360'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks', 'gt_quads', 'gt_obbs']),
+    dict(type='Collect_360', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks', 'gt_quads', 'gt_obbs']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -88,7 +88,7 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img']),
+            dict(type='Collect_360', keys=['img']),
         ])
 ]
 data = dict(
