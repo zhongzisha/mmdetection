@@ -130,7 +130,7 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # pdb.set_trace()
     anchors = flat_anchors[inside_flags, :]
 
-    gt_obbs = gt_mask_bp_obbs_360(gt_quads, with_module)
+    gt_obbs = gt_mask_bp_obbs_360(gt_quads.cpu().numpy(), with_module)
     w = gt_obbs[..., 2]
     h = gt_obbs[..., 3]
     xmin = gt_obbs[..., 0] - w / 2

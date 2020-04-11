@@ -2,7 +2,7 @@ from .compose import Compose
 from .formating import (Collect, ImageToTensor, ToDataContainer, ToTensor,
                         Transpose, to_tensor, Collect_360)
 from .instaboost import InstaBoost
-from .loading import LoadAnnotations, LoadImageFromFile, LoadProposals
+from .loading import LoadAnnotations, LoadImageFromFile, LoadProposals, LoadAnnotations_360
 from .test_aug import MultiScaleFlipAug
 from .transforms import (Albu, Expand, MinIoURandomCrop, Normalize, Pad,
                          PhotoMetricDistortion, RandomCrop, RandomFlip, Resize,
@@ -14,5 +14,5 @@ __all__ = [
     'LoadProposals', 'MultiScaleFlipAug', 'Resize', 'RandomFlip', 'Pad',
     'RandomCrop', 'Normalize', 'SegRescale', 'MinIoURandomCrop', 'Expand',
     'PhotoMetricDistortion', 'Albu', 'InstaBoost',
-    'FilterBoxes_360', 'Collect_360',
+    'FilterBoxes_360', 'Collect_360', 'LoadAnnotations_360'
 ]
