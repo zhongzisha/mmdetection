@@ -38,7 +38,7 @@ model = dict(
             loss_weight=1.0),
         loss_bbox=dict(type='SmoothL1Loss_360', beta=0.11,
                        loss_weight=1.0, angle_loss_weight=1.0,
-                       angle_loss_type='smooth_l1_loss_for_angle'),
+                       angle_loss_type='cosine'),
         # loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
     )
 )
@@ -111,7 +111,7 @@ data = dict(
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 # optimizer
-optimizer = dict(type='SGD', lr=0.0005, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(

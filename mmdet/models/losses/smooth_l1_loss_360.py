@@ -19,6 +19,7 @@ def smooth_l1_loss(pred, target, beta=1.0):
 
 @weighted_loss
 def smooth_l1_loss_for_angle(pred, target):
+    # bad
     assert pred.size() == target.size() and target.numel() > 0
     diff1 = torch.abs(pred - target) - torch.tensor(np.pi)
     diff = torch.abs(diff1)
@@ -34,13 +35,12 @@ def mse_loss(pred, target):
     return F.mse_loss(pred, target, reduction='none')
 
 
-def cos_loss(pred, target, weight=None, reduction='none', avg_factor=1.):
-    target = target * torch.tensor(2 * np.pi)
-    pred = pred * torch.tensor(2 * np.pi)
-    loss = torch.tensor(1.)-torch.cos(target - pred)
-    if weight is not None:
-        loss = loss * weight
-    loss = loss.sum() / avg_factor
+@weighted_loss
+def cosine_loss(pred, target):
+    diff1 = torch.abs(pred - target)
+    diff1 = torch.where(diff1 >= 1.5 * np.pi, 2 * np.pi - diff1, diff1)
+    diff1 = torch.where(diff1 >= np.pi, diff1 - np.pi / 2, diff1)
+    loss = torch.tensor(1.0) - torch.cos(diff1)
     return loss
 
 
@@ -90,7 +90,7 @@ class SmoothL1Loss_360(nn.Module):
                 avg_factor=avg_factor
             )
         elif self.angle_loss_type == 'cosine':
-            loss_angle = self.angle_loss_weight * cos_loss(
+            loss_angle = self.angle_loss_weight * cosine_loss(
                 pred[:, 4],
                 target[:, 4],
                 weight[:, 4],
