@@ -273,10 +273,12 @@ def dbbox2delta_v3(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1, 1])
     proposals_angle = proposals[..., 4]
 
     coord = gt[..., 0:2] - proposals[..., 0:2]
-    dx = (torch.cos(proposals[..., 4]) * coord[..., 0] +
-          torch.sin(proposals[..., 4]) * coord[..., 1]) / proposals_widths
-    dy = (-torch.sin(proposals[..., 4]) * coord[..., 0] +
-          torch.cos(proposals[..., 4]) * coord[..., 1]) / proposals_heights
+    # dx = (torch.cos(proposals[..., 4]) * coord[..., 0] +
+    #       torch.sin(proposals[..., 4]) * coord[..., 1]) / proposals_widths
+    # dy = (-torch.sin(proposals[..., 4]) * coord[..., 0] +
+    #       torch.cos(proposals[..., 4]) * coord[..., 1]) / proposals_heights
+    dx = coord[..., 0] / proposals_widths
+    dy = coord[..., 1] / proposals_heights
     dw = torch.log(gt_widths / proposals_widths)
     dh = torch.log(gt_heights / proposals_heights)
     # import pdb
@@ -374,10 +376,12 @@ def delta2dbbox_v3(Rrois,
     Rroi_angle = (Rrois[:, 4]).unsqueeze(1).expand_as(dangle)
     # import pdb
     # pdb.set_trace()
-    gx = dx * Rroi_w * torch.cos(Rroi_angle) \
-         - dy * Rroi_h * torch.sin(Rroi_angle) + Rroi_x
-    gy = dx * Rroi_w * torch.sin(Rroi_angle) \
-         + dy * Rroi_h * torch.cos(Rroi_angle) + Rroi_y
+    # gx = dx * Rroi_w * torch.cos(Rroi_angle) \
+    #      - dy * Rroi_h * torch.sin(Rroi_angle) + Rroi_x
+    # gy = dx * Rroi_w * torch.sin(Rroi_angle) \
+    #      + dy * Rroi_h * torch.cos(Rroi_angle) + Rroi_y
+    gx = dx * Rroi_w + Rroi_x
+    gy = dy * Rroi_h + Rroi_y
     gw = Rroi_w * dw.exp()
     gh = Rroi_h * dh.exp()
 
