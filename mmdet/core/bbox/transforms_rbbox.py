@@ -190,7 +190,8 @@ def delta2dbbox_360(Rrois,
     # TODO: check the hard code
     # gangle = (2 * np.pi) * dangle + Rroi_angle
     # gangle = gangle % ( 2 * np.pi)
-    gangle = (dangle + Rroi_angle) * 2*np.pi
+    # gangle = (dangle + Rroi_angle) * 2*np.pi
+    gangle = (dangle + Rroi_angle)
 
     if max_shape is not None:
         pass
@@ -870,7 +871,8 @@ def gt_mask_bp_obbs_360(gt_masks, with_module=True):
     # trans gt_masks to gt_obbs
     # gt_polys = mask2poly(gt_masks)
     # gt_bp_polys = get_best_begin_point(gt_polys)
-    gt_obbs = polygonToRotRectangle_batch_360(gt_masks)
+    # gt_obbs = polygonToRotRectangle_batch_360(gt_masks)
+    gt_obbs = polygonToRotRectangle_batch(gt_masks)
 
     return gt_obbs
 
@@ -1068,7 +1070,7 @@ def hbb2obb_v2_360(boxes):
                           ex_widths.unsqueeze(1),
                           ex_heights.unsqueeze(1)), 1)
     # initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi/2
-    initial_angles = c_bboxes.new_zeros((num_boxes, 1))
+    initial_angles = -c_bboxes.new_zeros((num_boxes, 1))
     dbboxes = torch.cat((c_bboxes, initial_angles), 1)
 
     return dbboxes
