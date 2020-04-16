@@ -193,8 +193,6 @@ def anchor_target_rbbox_360_single(flat_anchors,
         #     print('no such hbb2obb trans function')
         #     raise Exception
         pos_ext_bboxes = hbb2obb_v2_360(sampling_result.pos_bboxes)
-        import pdb
-        pdb.set_trace()
         if with_module:
             pos_bbox_targets = dbbox2delta_360(pos_ext_bboxes,
                                            pos_gt_obbs_ts,
