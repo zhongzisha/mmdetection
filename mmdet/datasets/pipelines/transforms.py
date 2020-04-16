@@ -356,8 +356,6 @@ class Pad(object):
                 else:
                     results[key] = np.empty((0, ) + pad_shape, dtype=np.uint8)
             elif key == 'gt_quads':
-                import pdb
-                pdb.set_trace()
                 results[key] = np.array(results[key])
 
     def _pad_seg(self, results):
