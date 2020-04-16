@@ -160,7 +160,6 @@ class Resize(object):
                             (0,) + results['img_shape'], dtype=np.uint8)
                 elif key == 'gt_quads':
                     scale_factor= results['scale_factor']
-                    print(scale_factor)
                     quads = np.array(results[key]).astype(np.float32)
                     quads[..., [0, 2, 4, 6]] *= scale_factor
                     quads[..., [1, 3, 5, 7]] *= scale_factor
