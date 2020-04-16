@@ -159,6 +159,8 @@ class Resize(object):
                         results[key] = np.empty(
                             (0,) + results['img_shape'], dtype=np.uint8)
                 elif key == 'gt_quads':
+                    import pdb
+                    pdb.set_trace()
                     scale_factor= results['scale_factor']
                     quads = np.array(results[key]).astype(np.float32)
                     quads[..., [0, 2, 4, 6]] *= scale_factor
@@ -177,6 +179,8 @@ class Resize(object):
                         results[key] = np.empty(
                             (0, ) + results['img_shape'], dtype=np.uint8)
                 elif key == 'gt_quads':
+                    import pdb
+                    pdb.set_trace()
                     w_scale, h_scale = results['scale_factor'][0:2]
                     quads = np.array(results[key]).astype(np.float32)
                     quads[:, [0, 2, 4, 6]] *= w_scale
@@ -281,6 +285,8 @@ class RandomFlip(object):
                         results[key] = np.empty(
                             (0, ) + results['img_shape'], dtype=np.uint8)
                 elif key == 'gt_quads':
+                    import pdb
+                    pdb.set_trace()
                     img_shape = results['img_shape']
                     quads = np.array(results[key]).astype(np.float32)
                     if results['flip_direction'] == 'horizontal':
@@ -351,6 +357,8 @@ class Pad(object):
                 else:
                     results[key] = np.empty((0, ) + pad_shape, dtype=np.uint8)
             elif key == 'gt_quads':
+                import pdb
+                pdb.set_trace()
                 results[key] = np.array(results[key])
 
     def _pad_seg(self, results):
