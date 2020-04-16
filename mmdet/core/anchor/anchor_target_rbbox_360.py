@@ -6,6 +6,7 @@ from ..bbox import assign_and_sample, build_assigner, \
 from ..utils import multi_apply
 from mmdet.core.bbox.transforms_rbbox import gt_mask_bp_obbs_360, get_new_quads_from_orig_quads
 
+import copy
 
 def anchor_target_rbbox_360(anchor_list,
                             valid_flag_list,
@@ -128,7 +129,10 @@ def anchor_target_rbbox_360_single(flat_anchors,
     anchors = flat_anchors[inside_flags, :]
 
     # here, minAreaRect to get the best points for each labeled quadrangle
+    old_gt_quads = copy.deepcopy(gt_quads)
     gt_quads = get_new_quads_from_orig_quads(gt_quads)
+    import pdb
+    pdb.set_trace()
 
     gt_obbs = gt_mask_bp_obbs_360(gt_quads, with_module)
     w = gt_obbs[..., 2]
