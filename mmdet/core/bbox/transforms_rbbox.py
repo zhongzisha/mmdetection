@@ -1164,6 +1164,24 @@ def polygonToRotRectangle_batch(bbox, with_module=True):
     return dboxes
 
 
+def get_new_quads_from_orig_quads(quad_boxes):
+    new_quad_boxes = []
+    for box in quad_boxes:
+        box = np.array(box).reshape(4,2)
+        rect1 = cv2.minAreaRect(box)
+        x, y, w, h, theta = rect1[0][0], rect1[0][1], rect1[1][0], rect1[1][1], rect1[2]
+        box1 = cv2.boxPoints(((x, y), (w, h), theta))  # theta in degrees
+        box1 = box1.reshape([4, 2])
+        indexes = np.array([[0, 1, 2, 3], [3, 0, 1, 2], [2, 3, 0, 1], [1, 2, 3, 0]], dtype=np.int)
+        dist = np.zeros((4,), dtype=np.float32)
+        for i in range(4):
+            dist[i] = np.sum(np.sqrt(np.sum(np.square(box - box1[indexes[i]]), axis=0)))
+        mini = np.argmin(dist)
+        box1 = box1[indexes[mini]]
+        new_quad_boxes.append(box1.reshape((1, 8)))
+    return np.array(new_quad_boxes).reshape((-1, 8))
+
+
 def polygonToRotRectangle_batch_360(quad_boxes):
     rotated_boxes = []
     for box in quad_boxes:

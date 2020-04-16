@@ -4,7 +4,7 @@ import numpy as np
 from ..bbox import assign_and_sample, build_assigner, \
     PseudoSampler, bbox2delta, dbbox2delta_360, dbbox2delta_v3_360, hbb2obb_v2_360
 from ..utils import multi_apply
-from mmdet.core.bbox.transforms_rbbox import gt_mask_bp_obbs_360
+from mmdet.core.bbox.transforms_rbbox import gt_mask_bp_obbs_360, get_new_quads_from_orig_quads
 
 
 def anchor_target_rbbox_360(anchor_list,
@@ -126,6 +126,9 @@ def anchor_target_rbbox_360_single(flat_anchors,
     # print('in anchor target rbbox single')
     # pdb.set_trace()
     anchors = flat_anchors[inside_flags, :]
+
+    # here, minAreaRect to get the best points for each labeled quadrangle
+    gt_quads = get_new_quads_from_orig_quads(gt_quads)
 
     gt_obbs = gt_mask_bp_obbs_360(gt_quads, with_module)
     w = gt_obbs[..., 2]
