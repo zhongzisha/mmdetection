@@ -872,7 +872,7 @@ def gt_mask_bp_obbs_360(gt_masks, with_module=True):
     # gt_polys = mask2poly(gt_masks)
     # gt_bp_polys = get_best_begin_point(gt_polys)
     # gt_obbs = polygonToRotRectangle_batch_360(gt_masks)
-    gt_obbs = polygonToRotRectangle_batch(gt_masks)
+    gt_obbs = polygonToRotRectangle_batch(gt_masks, with_module)
 
     return gt_obbs
 
