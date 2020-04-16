@@ -322,8 +322,8 @@ def dbbox2delta_v3_360(proposals, gt, means = [0, 0, 0, 0, 0], stds=[1, 1, 1, 1,
     #       torch.sin(proposals[..., 4]) * coord[..., 1]) / proposals_widths
     # dy = (-torch.sin(proposals[..., 4]) * coord[..., 0] +
     #       torch.cos(proposals[..., 4]) * coord[..., 1]) / proposals_heights
-    dx = coord[..., 0] / proposals[..., 0]
-    dy = coord[..., 1] / proposals[..., 1]
+    dx = coord[..., 0] / proposals_widths
+    dy = coord[..., 1] / proposals_heights
     dw = torch.log(gt_widths / proposals_widths)
     dh = torch.log(gt_heights / proposals_heights)
     # import pdb
@@ -1070,7 +1070,7 @@ def hbb2obb_v2_360(boxes):
                           ex_widths.unsqueeze(1),
                           ex_heights.unsqueeze(1)), 1)
     # initial_angles = c_bboxes.new_ones((num_boxes, 1)) * np.pi/2
-    initial_angles = -c_bboxes.new_zeros((num_boxes, 1))
+    initial_angles = -c_bboxes.new_zeros((num_boxes, 1)) * np.pi/2
     dbboxes = torch.cat((c_bboxes, initial_angles), 1)
 
     return dbboxes

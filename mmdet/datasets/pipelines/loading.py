@@ -208,12 +208,10 @@ class LoadAnnotations_360(object):
     def _load_masks(self, results):
         h, w = results['img_info']['height'], results['img_info']['width']
         gt_masks = results['ann_info']['masks']
-        results['gt_quads'] = np.array(copy.deepcopy(gt_masks))  # gt_masks = [[x1y1x2y2x3y3x4y4]] only for DOTA
         if self.poly2mask:
             gt_masks = [self._poly2mask(mask, h, w) for mask in gt_masks]
         results['gt_masks'] = gt_masks
         results['mask_fields'].append('gt_masks')
-        results['mask_fields'].append('gt_quads')
         return results
 
     def _load_quads(self, results):
