@@ -134,16 +134,16 @@ def anchor_target_rbbox_360_single(flat_anchors,
 
     gt_obbs = gt_mask_bp_obbs_360(gt_quads, with_module)
 
-    # w = gt_obbs[..., 2]
-    # h = gt_obbs[..., 3]
-    # xmin = gt_obbs[..., 0] - w / 2
-    # ymin = gt_obbs[..., 1] - h / 2
-    # xmax = gt_obbs[..., 0] + w / 2
-    # ymax = gt_obbs[..., 1] + h / 2
-    # valid_indices = np.where((xmin>=0) & (ymin>=0) & (xmax<img_shape[1]) & (ymax<img_shape[0]) & (w>1) & (h>1))[0]
-    # gt_bboxes = gt_bboxes[valid_indices]
-    # gt_obbs = gt_obbs[valid_indices]
-    # gt_labels = gt_labels[valid_indices]
+    w = gt_obbs[..., 2]
+    h = gt_obbs[..., 3]
+    xmin = gt_obbs[..., 0] - w / 2
+    ymin = gt_obbs[..., 1] - h / 2
+    xmax = gt_obbs[..., 0] + w / 2
+    ymax = gt_obbs[..., 1] + h / 2
+    valid_indices = np.where((xmin>=0) & (ymin>=0) & (xmax<img_shape[1]) & (ymax<img_shape[0]) & (w>1) & (h>1))[0]
+    gt_bboxes = gt_bboxes[valid_indices]
+    gt_obbs = gt_obbs[valid_indices]
+    gt_labels = gt_labels[valid_indices]
 
     if sampling:
         assign_result, sampling_result = assign_and_sample(
