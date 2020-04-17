@@ -480,7 +480,7 @@ class FCOSRHead(nn.Module):
         pdb.set_trace()
 
         # TODO: figure out why these two are different
-        areas = areas[None].expand(num_points, num_gts)
+        areas = areas.view(1, -1).expand(num_points, num_gts)
         regress_ranges = regress_ranges[:, None, :].expand(
             num_points, num_gts, 2)
 
