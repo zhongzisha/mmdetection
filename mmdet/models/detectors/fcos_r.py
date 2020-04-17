@@ -9,8 +9,9 @@ class FCOS_R(SingleStageDetectorRbbox_360):
                  backbone,
                  neck,
                  bbox_head,
+                 rbbox_head=None,
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        super(FCOS_R, self).__init__(backbone, neck, bbox_head, train_cfg,
+        super(FCOS_R, self).__init__(backbone, neck, bbox_head, rbbox_head, train_cfg,
                                    test_cfg, pretrained)
