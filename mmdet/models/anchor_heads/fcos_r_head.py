@@ -470,6 +470,8 @@ class FCOSRHead(nn.Module):
         right = self.compute_point_line_distances(p2, p3, P)
         bottom = self.compute_point_line_distances(p3, p4, P)  # num_points x num_gts
 
+        import pdb
+        pdb.set_trace()
         angles = gt_obbs[:, 4] / (2 * np.pi)  # [0, 2*pi] --> [0, 1]
         angles = angles.view(1, -1).expand(left.shape[0], -1)
         areas = gt_obbs[:, 2] * gt_obbs[:, 3]
@@ -500,9 +502,6 @@ class FCOSRHead(nn.Module):
         labels = gt_labels[min_area_inds]
         labels[min_area == INF] = 0
         bbox_targets = bbox_targets[range(num_points), min_area_inds]
-
-        import pdb
-        pdb.set_trace()
 
         bbox_targets = torch.cat([bbox_targets, angles.view(-1, 1)], dim=1)
 
