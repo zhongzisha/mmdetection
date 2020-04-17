@@ -460,6 +460,7 @@ class FCOSRHead(nn.Module):
         angles = gt_obbs[:, 4] / (2 * np.pi)  # [0, 2*pi] --> [0, 1]
         gt_quads = torch.from_numpy(gt_quads).to(gt_bboxes.device)
         gt_obbs = torch.from_numpy(gt_obbs).to(gt_bboxes.device)
+        angles = torch.from_numpy(angles).to(gt_bboxes.device)
 
         P = F.pad(points, [0, 1], 'constant', 0)
         p1 = F.pad(gt_quads[:, [0, 1]], [0, 1], 'constant', 0)
@@ -471,9 +472,9 @@ class FCOSRHead(nn.Module):
         right = self.compute_point_line_distances(p2, p3, P)
         bottom = self.compute_point_line_distances(p3, p4, P)  # num_points x num_gts
 
-        print(left.shape, top.shape, right.shape, bottom.shape, angles.shape)
-
+        angles = angles[None].repeat(num_points, 1)
         areas = gt_obbs[:, 2] * gt_obbs[:, 3]
+        print(left.shape, top.shape, right.shape, bottom.shape, angles.shape, areas.shape)
 
         # TODO: figure out why these two are different
         # areas = areas[None].expand(num_points, num_gts)
