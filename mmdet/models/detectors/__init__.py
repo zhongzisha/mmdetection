@@ -24,6 +24,7 @@ from .single_stage_rbbox import SingleStageDetectorRbbox
 from .retinanet_obb import RetinaNetRbbox
 from .single_stage_rbbox_360 import SingleStageDetectorRbbox_360
 from .retinanet_obb_360 import RetinaNetRbbox_360
+from .fcos_r import FCOS_R
 
 __all__ = [
     'ATSS', 'BaseDetector', 'SingleStageDetector', 'TwoStageDetector', 'RPN',
@@ -33,5 +34,6 @@ __all__ = [
     'FasterRCNNOBB', 'TwoStageDetectorRbbox',
     'RoITransformer', 'FasterRCNNHBBOBB',
     'SingleStageDetectorRbbox', 'RetinaNetRbbox',
-    'SingleStageDetectorRbbox_360', 'RetinaNetRbbox_360'
+    'SingleStageDetectorRbbox_360', 'RetinaNetRbbox_360',
+    'FCOS_R'
 ]

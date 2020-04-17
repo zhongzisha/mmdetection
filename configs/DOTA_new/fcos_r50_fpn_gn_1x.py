@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='RetinaNetRbbox',
+    type='FCOS_R',
     pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',
@@ -17,30 +17,26 @@ model = dict(
         start_level=1,
         add_extra_convs=True,
         num_outs=5),
-    rbbox_head=dict(
-        type='RetinaHeadRbbox',
+    bbox_head=dict(
+        type='FCOSRHead',
         num_classes=16,
         in_channels=256,
         stacked_convs=4,
         feat_channels=256,
-        octave_base_scale=4,
-        scales_per_octave=3,
-        anchor_ratios=[0.5, 1.0, 2.0],
-        anchor_strides=[8, 16, 32, 64, 128],
-        target_means=[.0, .0, .0, .0, .0],
-        target_stds=[1.0, 1.0, 1.0, 1.0, 1.0],
-        with_module=False,
+        strides=[8, 16, 32, 64, 128],
         loss_cls=dict(
             type='FocalLoss',
             use_sigmoid=True,
             gamma=2.0,
             alpha=0.25,
             loss_weight=1.0),
-        loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0)))
+        loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0),
+        loss_centerness=dict(
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)))
 # training and testing settings
 train_cfg = dict(
     assigner=dict(
-        type='MaxIoUAssignerCy',
+        type='MaxIoUAssigner',
         pos_iou_thr=0.5,
         neg_iou_thr=0.4,
         min_pos_iou=0,
@@ -49,11 +45,12 @@ train_cfg = dict(
     pos_weight=-1,
     debug=False)
 test_cfg = dict(
-    nms_pre=2000,
+    nms_pre=1000,
     min_bbox_size=0,
     score_thr=0.05,
-    nms=dict(type='py_cpu_nms_poly_fast', iou_thr=0.1),
-    max_per_img=2000)
+    nms=dict(type='nms', iou_thr=0.5),
+    max_per_img=100)
+# dataset settings
 # dataset settings
 dataset_type = 'DOTADataset'
 data_root = 'data/dota1_1024/'
@@ -104,15 +101,20 @@ data = dict(
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+optimizer = dict(
+    type='SGD',
+    lr=0.01,
+    momentum=0.9,
+    weight_decay=0.0001,
+    paramwise_options=dict(bias_lr_mult=2., bias_decay_mult=0.))
+optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
-    warmup='linear',
+    warmup='constant',
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[16, 22])
+    step=[8, 11])
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
@@ -123,10 +125,10 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 24  # 12
+total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/retinanet_obb_r50_fpn_2x_dota1'
+work_dir = './work_dirs/fcos_r50_fpn_gn_1x'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
