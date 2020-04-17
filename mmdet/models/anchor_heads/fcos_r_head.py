@@ -473,6 +473,7 @@ class FCOSRHead(nn.Module):
         import pdb
         pdb.set_trace()
         angles = gt_obbs[:, 4] / (2 * np.pi)  # [0, 2*pi] --> [0, 1]
+        angles = angles.reshape(-1, 1)
         areas = gt_obbs[:, 2] * gt_obbs[:, 3]
 
         # TODO: figure out why these two are different
