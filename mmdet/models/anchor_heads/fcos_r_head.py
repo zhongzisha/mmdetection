@@ -456,6 +456,8 @@ class FCOSRHead(nn.Module):
             return gt_labels.new_zeros(num_points), \
                    gt_bboxes.new_zeros((num_points, 5))
 
+        gt_quads = torch.from_numpy(gt_quads).to(gt_bboxes.device)
+
         P = F.pad(points, [0, 1], 'constant', 0)
         p1 = F.pad(gt_quads[:, [0, 1]], [0, 1], 'constant', 0)
         p2 = F.pad(gt_quads[:, [2, 3]], [0, 1], 'constant', 0)
