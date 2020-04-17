@@ -472,7 +472,7 @@ class FCOSRHead(nn.Module):
         right = self.compute_point_line_distances(p2, p3, P)
         bottom = self.compute_point_line_distances(p3, p4, P)  # num_points x num_gts
 
-        angles = angles.view(1, -1).expand(left.shape[0], -1)
+        angles = angles.view(1, -1).expand(num_points, num_gts)
         areas = gt_obbs[:, 2] * gt_obbs[:, 3]
         print(left.shape, top.shape, right.shape, bottom.shape, angles.shape, areas.shape)
 
@@ -480,8 +480,7 @@ class FCOSRHead(nn.Module):
         pdb.set_trace()
 
         # TODO: figure out why these two are different
-        # areas = areas[None].expand(num_points, num_gts)
-        areas = areas[None].repeat(num_points, 1)
+        areas = areas[None].expand(num_points, num_gts)
         regress_ranges = regress_ranges[:, None, :].expand(
             num_points, num_gts, 2)
 
