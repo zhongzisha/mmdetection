@@ -476,11 +476,12 @@ class FCOSRHead(nn.Module):
         areas = gt_obbs[:, 2] * gt_obbs[:, 3]
         print(left.shape, top.shape, right.shape, bottom.shape, angles.shape, areas.shape)
 
+        # TODO: figure out why these two are different
+        areas = areas[None].view(1, -1).expand(num_points, num_gts)
+
         import pdb
         pdb.set_trace()
 
-        # TODO: figure out why these two are different
-        areas = areas.view(1, -1).expand(num_points, num_gts)
         regress_ranges = regress_ranges[:, None, :].expand(
             num_points, num_gts, 2)
 
