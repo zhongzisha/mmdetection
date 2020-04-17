@@ -500,6 +500,10 @@ class FCOSRHead(nn.Module):
         labels = gt_labels[min_area_inds]
         labels[min_area == INF] = 0
         bbox_targets = bbox_targets[range(num_points), min_area_inds]
+
+        import pdb
+        pdb.set_trace()
+
         bbox_targets = torch.cat([bbox_targets, angles.view(-1, 1)], dim=1)
 
         return labels, bbox_targets
