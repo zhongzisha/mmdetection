@@ -452,12 +452,6 @@ class FCOSRHead(nn.Module):
     def fcos_target_single(self, gt_bboxes, gt_quads, gt_labels, img_meta, points, regress_ranges,
                            num_points_per_lvl):
         img_shape = img_meta['img_shape'][:2]
-        num_points = points.size(0)
-        num_gts = gt_labels.size(0)
-        if num_gts == 0:
-            return gt_labels.new_zeros(num_points), \
-                   gt_bboxes.new_zeros((num_points, 5))
-
         gt_obbs = quad2rbbox(gt_quads)
 
         w = gt_obbs[..., 2]
@@ -471,6 +465,12 @@ class FCOSRHead(nn.Module):
         gt_bboxes = gt_bboxes[valid_indices]
         gt_obbs = gt_obbs[valid_indices]
         gt_labels = gt_labels[valid_indices]
+
+        num_points = points.size(0)
+        num_gts = gt_labels.size(0)
+        if num_gts == 0:
+            return gt_labels.new_zeros(num_points), \
+                   gt_bboxes.new_zeros((num_points, 5))
 
         angles = gt_obbs[:, 4] / (2 * np.pi)  # [0, 2*pi] --> [0, 1]
         gt_quads = torch.from_numpy(gt_quads).to(gt_bboxes.device)
