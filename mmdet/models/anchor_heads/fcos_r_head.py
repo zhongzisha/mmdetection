@@ -482,7 +482,7 @@ class FCOSRHead(nn.Module):
         regress_ranges = regress_ranges[:, None, :].expand(
             num_points, num_gts, 2)
 
-        bbox_targets = torch.stack((left, top, right, bottom), -1)
+        bbox_targets = torch.stack((left, top, right, bottom, angles), -1)
 
         # condition1: inside a gt bbox
         inside_gt_bbox_mask = bbox_targets.min(-1)[0] > 0
@@ -502,10 +502,6 @@ class FCOSRHead(nn.Module):
         labels = gt_labels[min_area_inds]
         labels[min_area == INF] = 0
         bbox_targets = bbox_targets[range(num_points), min_area_inds]
-
-        print(bbox_targets.shape, angles.shape)
-
-        bbox_targets = torch.cat([bbox_targets, angles.view(-1, 1)], dim=1)
 
         return labels, bbox_targets
 
