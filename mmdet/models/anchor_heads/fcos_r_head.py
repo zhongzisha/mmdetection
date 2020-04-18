@@ -479,8 +479,7 @@ class FCOSRHead(nn.Module):
         # TODO: figure out why these two are different
         areas = areas[None].view(1, -1).expand(num_points, num_gts)
 
-        import pdb
-        pdb.set_trace()
+        print('num_gts', num_gts)
 
         regress_ranges = regress_ranges[:, None, :].expand(
             num_points, num_gts, 2)
