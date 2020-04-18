@@ -7,7 +7,7 @@ class FCOS_R(SingleStageDetectorRbbox_360):
 
     def __init__(self,
                  backbone,
-                 neck,
+                 neck=None,
                  bbox_head=None,
                  rbbox_head=None,
                  train_cfg=None,
