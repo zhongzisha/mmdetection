@@ -518,6 +518,9 @@ class FCOSRHead(nn.Module):
         labels[min_area == INF] = 0
         bbox_targets = bbox_targets[range(num_points), min_area_inds]
 
+        import pdb
+        pdb.set_trace()
+
         return labels, bbox_targets
 
     def centerness_target(self, pos_bbox_targets):
