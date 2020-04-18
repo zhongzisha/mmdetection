@@ -479,8 +479,6 @@ class FCOSRHead(nn.Module):
         # TODO: figure out why these two are different
         areas = areas[None].view(1, -1).expand(num_points, num_gts)
 
-        print('num_gts', num_gts)
-
         regress_ranges = regress_ranges[:, None, :].expand(
             num_points, num_gts, 2)
 
@@ -504,6 +502,8 @@ class FCOSRHead(nn.Module):
         labels = gt_labels[min_area_inds]
         labels[min_area == INF] = 0
         bbox_targets = bbox_targets[range(num_points), min_area_inds]
+
+        print(bbox_targets.shape, angles.shape)
 
         bbox_targets = torch.cat([bbox_targets, angles.view(-1, 1)], dim=1)
 
