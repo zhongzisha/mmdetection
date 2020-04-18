@@ -465,6 +465,7 @@ class FCOSRHead(nn.Module):
         gt_bboxes = gt_bboxes[valid_indices]
         gt_obbs = gt_obbs[valid_indices]
         gt_labels = gt_labels[valid_indices]
+        gt_quads = gt_quads[valid_indices]
 
         num_points = points.size(0)
         num_gts = gt_labels.size(0)
