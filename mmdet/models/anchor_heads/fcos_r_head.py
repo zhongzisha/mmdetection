@@ -222,7 +222,7 @@ class FCOSRHead(nn.Module):
         all_level_points = self.get_points(featmap_sizes, bbox_preds[0].dtype,
                                            bbox_preds[0].device)
         labels, bbox_targets = self.fcos_target(all_level_points, gt_bboxes, gt_quads,
-                                                gt_labels)
+                                                gt_labels, img_metas)
 
         num_imgs = cls_scores[0].size(0)
         # flatten cls_scores, bbox_preds and centerness
@@ -392,7 +392,7 @@ class FCOSRHead(nn.Module):
             (x.reshape(-1), y.reshape(-1)), dim=-1) + stride // 2
         return points
 
-    def fcos_target(self, points, gt_bboxes_list, gt_quads_list, gt_labels_list):
+    def fcos_target(self, points, gt_bboxes_list, gt_quads_list, gt_labels_list, img_metas):
         assert len(points) == len(self.regress_ranges)
         num_levels = len(points)
         # expand regress ranges to align with points
@@ -413,6 +413,7 @@ class FCOSRHead(nn.Module):
             gt_bboxes_list,
             gt_quads_list,
             gt_labels_list,
+            img_metas,
             points=concat_points,
             regress_ranges=concat_regress_ranges,
             num_points_per_lvl=num_points)
@@ -448,8 +449,9 @@ class FCOSRHead(nn.Module):
         d = norm_cross / norm_lines
         return d * sign
 
-    def fcos_target_single(self, gt_bboxes, gt_quads, gt_labels, points, regress_ranges,
+    def fcos_target_single(self, gt_bboxes, gt_quads, gt_labels, img_meta, points, regress_ranges,
                            num_points_per_lvl):
+        img_shape = img_meta['img_shape'][:2]
         num_points = points.size(0)
         num_gts = gt_labels.size(0)
         if num_gts == 0:
@@ -457,6 +459,19 @@ class FCOSRHead(nn.Module):
                    gt_bboxes.new_zeros((num_points, 5))
 
         gt_obbs = quad2rbbox(gt_quads)
+
+        w = gt_obbs[..., 2]
+        h = gt_obbs[..., 3]
+        xmin = gt_obbs[..., 0] - w / 2
+        ymin = gt_obbs[..., 1] - h / 2
+        xmax = gt_obbs[..., 0] + w / 2
+        ymax = gt_obbs[..., 1] + h / 2
+        valid_indices = \
+        np.where((xmin >= 0) & (ymin >= 0) & (xmax < img_shape[1]) & (ymax < img_shape[0]) & (w > 1) & (h > 1))[0]
+        gt_bboxes = gt_bboxes[valid_indices]
+        gt_obbs = gt_obbs[valid_indices]
+        gt_labels = gt_labels[valid_indices]
+
         angles = gt_obbs[:, 4] / (2 * np.pi)  # [0, 2*pi] --> [0, 1]
         gt_quads = torch.from_numpy(gt_quads).to(gt_bboxes.device)
         gt_obbs = torch.from_numpy(gt_obbs).to(gt_bboxes.device)
