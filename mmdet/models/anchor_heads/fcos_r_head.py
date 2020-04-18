@@ -474,7 +474,6 @@ class FCOSRHead(nn.Module):
 
         angles = angles.view(1, -1).expand(num_points, num_gts)
         areas = gt_obbs[:, 2] * gt_obbs[:, 3]
-        print(left.shape, top.shape, right.shape, bottom.shape, angles.shape, areas.shape)
 
         # TODO: figure out why these two are different
         areas = areas[None].view(1, -1).expand(num_points, num_gts)
