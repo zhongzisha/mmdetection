@@ -57,8 +57,8 @@ def multiclass_nms_rbbox(multi_bboxes,
             cls_dets, _ = nms_op(cls_dets, **nms_cfg_)
             # elapsed = (time.clock() - start)
             # print("Time used:", elapsed)
-        # import pdb
-        # pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         cls_labels = multi_bboxes.new_full(
             (cls_dets.shape[0], ), i - 1, dtype=torch.long)
         bboxes.append(cls_dets)

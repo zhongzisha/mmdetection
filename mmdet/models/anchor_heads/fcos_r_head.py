@@ -3,70 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import normal_init
 
-from mmdet.core import distance2bbox, force_fp32, multi_apply, multiclass_nms_rbbox_360
+from mmdet.core import distance2bbox, force_fp32, multi_apply, multiclass_nms_rbbox
 from mmdet.ops import ConvModule, Scale
 from ..builder import build_loss
 from ..registry import HEADS
 from ..utils import bias_init_with_prob
+from mmdet.core.bbox.transforms_rbbox import polygonToRotRectangle_batch, get_best_begin_point_for_quad_boxes
 
 INF = 1e8
 
 import numpy as np
 import cv2
-
-def quad2rbbox(quad_boxes):
-    rotated_boxes = []
-    for box in quad_boxes:
-        box = np.array(box).reshape(4, 2)
-        # box: [4x2],0:top-left,1:top-right,2:bottom-right,3:bottom-left
-        p1x = (box[0, 0] + box[1, 0]) / 2
-        p1y = (box[0, 1] + box[1, 1]) / 2
-        p2x = (box[2, 0] + box[3, 0]) / 2
-        p2y = (box[2, 1] + box[3, 1]) / 2
-
-        if p1x>p2x:
-          angle1 = np.arctan(np.abs(p1y-p2y)/np.abs(p2x-p1x))
-          if p1y==p2y:
-            angle1 = 0
-          elif p1y>p2y:
-            # 4
-            angle1 = 2*np.pi - angle1
-          elif p1y<p2y:
-            # 1
-            angle1 = angle1
-        elif p1x<p2x:
-          angle1 = np.arctan(np.abs(p1y-p2y)/np.abs(p2x-p1x))
-          if p1y==p2y:
-            angle1 = np.pi
-          elif p1y>p2y:
-            # 3
-            angle1 = np.pi + angle1
-          elif p1y<p2y:
-            # 2
-            angle1 = np.pi - angle1
-        else:
-          if p1y>p2y:
-            angle1 = 1.5*np.pi
-          else:
-            angle1 = np.pi/2
-        # rotate the four points
-        rx, ry = np.mean(box, axis=0)
-        rect1 = cv2.minAreaRect(box)
-        x, y, w, h, theta = rect1[0][0], rect1[0][1], rect1[1][0], rect1[1][1], rect1[2]
-        box1 = cv2.boxPoints(((x,y),(w,h),theta))  # theta in degrees
-        box1 = box1.reshape([4,2])
-        indexes = np.array([[0,1,2,3],[3,0,1,2],[2,3,0,1],[1,2,3,0]],dtype=np.int)
-        dist = np.zeros((4,),dtype=np.float32)
-        for i in range(4):
-          dist[i] = np.sum(np.sqrt(np.sum(np.square(box-box1[indexes[i]]),axis=0)))
-        mini = np.argmin(dist)
-        box1 = box1[indexes[mini]]
-        w = np.sqrt(np.sum(np.square(box1[0,:]-box1[1,:])))
-        h = np.sqrt(np.sum(np.square(box1[1,:]-box1[2,:])))
-        w = int(w)
-        h = int(h)
-        rotated_boxes.append([rx,ry,w,h,angle1])
-    return np.array(rotated_boxes,dtype=np.float32).reshape(-1, 5)    # angle1 in [0, 2*pi]
 
 
 def distance2rbbox(points, distance, max_shape=None):
@@ -95,8 +42,7 @@ def distance2rbbox(points, distance, max_shape=None):
     yc = (y1 + y2) / 2
     w = distance[:, 0] + distance[:, 2]
     h = distance[:, 1] + distance[:, 3]
-    return torch.stack([xc, yc, w, h, distance[:, 4] * (2*np.pi)], -1)
-
+    return torch.stack([xc, yc, w, h, distance[:, 4].sigmoid()*(-np.pi)], -1)
 
 
 @HEADS.register_module
@@ -244,8 +190,8 @@ class FCOSRHead(nn.Module):
         flatten_labels = torch.cat(labels)
         flatten_bbox_targets = torch.cat(bbox_targets)
         # repeat points to align with bbox_preds
-        flatten_points = torch.cat(
-            [points.repeat(num_imgs, 1) for points in all_level_points])
+        # flatten_points = torch.cat(
+        #     [points.repeat(num_imgs, 1) for points in all_level_points])
 
         pos_inds = flatten_labels.nonzero().reshape(-1)
         num_pos = len(pos_inds)
@@ -259,18 +205,19 @@ class FCOSRHead(nn.Module):
         if num_pos > 0:
             pos_bbox_targets = flatten_bbox_targets[pos_inds]
             pos_centerness_targets = self.centerness_target(pos_bbox_targets)
-            pos_points = flatten_points[pos_inds]
-            pos_decoded_bbox_preds = distance2rbbox(pos_points, pos_bbox_preds)
-            pos_decoded_target_preds = distance2rbbox(pos_points,
-                                                     pos_bbox_targets)
+            # pos_points = flatten_points[pos_inds]
+            # pos_decoded_bbox_preds = distance2rbbox(pos_points, pos_bbox_preds)
+            # pos_decoded_target_preds = distance2rbbox(pos_points, pos_bbox_targets)
+
             # centerness weighted iou loss
             loss_bbox = self.loss_bbox(
-                pos_decoded_bbox_preds,
-                pos_decoded_target_preds,
+                pos_bbox_preds,
+                pos_bbox_targets,
                 weight=pos_centerness_targets,
                 avg_factor=pos_centerness_targets.sum())
             loss_centerness = self.loss_centerness(pos_centerness,
                                                    pos_centerness_targets)
+
         else:
             loss_bbox = pos_bbox_preds.sum()
             loss_centerness = pos_centerness.sum()
@@ -354,7 +301,7 @@ class FCOSRHead(nn.Module):
         padding = mlvl_scores.new_zeros(mlvl_scores.shape[0], 1)
         mlvl_scores = torch.cat([padding, mlvl_scores], dim=1)
         mlvl_centerness = torch.cat(mlvl_centerness)
-        det_bboxes, det_labels = multiclass_nms_rbbox_360(
+        det_bboxes, det_labels = multiclass_nms_rbbox(
             mlvl_bboxes,
             mlvl_scores,
             cfg.score_thr,
@@ -452,7 +399,8 @@ class FCOSRHead(nn.Module):
     def fcos_target_single(self, gt_bboxes, gt_quads, gt_labels, img_meta, points, regress_ranges,
                            num_points_per_lvl):
         img_shape = img_meta['img_shape'][:2]
-        gt_obbs = quad2rbbox(gt_quads)
+        gt_obbs = polygonToRotRectangle_batch(get_best_begin_point_for_quad_boxes(gt_quads), with_module=False)
+        gt_obbs = gt_obbs.astype(np.float32)
 
         w = gt_obbs[..., 2]
         h = gt_obbs[..., 3]
@@ -473,7 +421,7 @@ class FCOSRHead(nn.Module):
             return gt_labels.new_zeros(num_points), \
                    gt_bboxes.new_zeros((num_points, 5))
 
-        angles = gt_obbs[:, 4] / (2 * np.pi)  # [0, 2*pi] --> [0, 1]
+        angles = gt_obbs[:, 4] / (-np.pi)
         gt_quads = torch.from_numpy(gt_quads).to(gt_bboxes.device)
         gt_obbs = torch.from_numpy(gt_obbs).to(gt_bboxes.device)
         angles = torch.from_numpy(angles).to(gt_bboxes.device)
@@ -492,12 +440,13 @@ class FCOSRHead(nn.Module):
         areas = gt_obbs[:, 2] * gt_obbs[:, 3]
 
         # TODO: figure out why these two are different
-        areas = areas[None].view(1, -1).expand(num_points, num_gts)
+        # areas = areas[None].view(1, -1).expand(num_points, num_gts)
+        areas = areas[None].repeat(num_points, 1)   # this is very important!!!
 
         regress_ranges = regress_ranges[:, None, :].expand(
             num_points, num_gts, 2)
 
-        bbox_targets = torch.stack((left, top, right, bottom, angles), -1)
+        bbox_targets = torch.stack((left, top, right, bottom), -1)
 
         # condition1: inside a gt bbox
         inside_gt_bbox_mask = bbox_targets.min(-1)[0] > 0
@@ -517,11 +466,8 @@ class FCOSRHead(nn.Module):
         labels = gt_labels[min_area_inds]
         labels[min_area == INF] = 0
         bbox_targets = bbox_targets[range(num_points), min_area_inds]
-
-        import pdb
-        pdb.set_trace()
-
-        return labels, bbox_targets
+        angles = angles[range(num_points), min_area_inds]
+        return labels, torch.cat([bbox_targets, angles.view(-1, 1)], dim=1)
 
     def centerness_target(self, pos_bbox_targets):
         # only calculate pos centerness targets, otherwise there may be nan

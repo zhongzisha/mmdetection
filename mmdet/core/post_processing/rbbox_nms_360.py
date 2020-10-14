@@ -44,7 +44,7 @@ def multiclass_nms_rbbox_360(multi_bboxes,
             _bboxes = multi_bboxes[cls_inds, :]
         else:
             _bboxes = multi_bboxes[cls_inds, i * 5: (i + 1) * 5]
-        _bboxes = torch.from_numpy(RotBox2Polys(_bboxes.cpu().numpy())).to(multi_scores.device)
+        _bboxes = torch.from_numpy(RotBox2Polys_360(_bboxes.cpu().numpy())).to(multi_scores.device)
         # _bboxes = RotBox2Polys_torch(_bboxes)
         # _bboxes = RotBox2Polys_torch(_bboxes.cpu()).to(multi_scores.device)
         _scores = multi_scores[cls_inds, i]
@@ -111,7 +111,7 @@ def Pesudomulticlass_nms_rbbox_360(multi_bboxes,
             _bboxes = multi_bboxes[cls_inds, :]
         else:
             _bboxes = multi_bboxes[cls_inds, i * 5: (i + 1) * 5]
-        _bboxes = torch.from_numpy(RotBox2Polys(_bboxes.cpu().numpy())).to(multi_scores.device)
+        _bboxes = torch.from_numpy(RotBox2Polys_360(_bboxes.cpu().numpy())).to(multi_scores.device)
         _scores = multi_scores[cls_inds, i]
         if score_factors is not None:
             _scores *= score_factors[cls_inds]

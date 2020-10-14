@@ -16,11 +16,14 @@ from .anchor_head_rbbox import AnchorHeadRbbox
 from .retina_head_rbbox import RetinaHeadRbbox
 from .retina_head_rbbox_360 import RetinaHeadRbbox_360
 from .fcos_r_head import FCOSRHead
+from .fcos_r_head_360 import FCOSRHead_360
+from .fcos_r_head_360_cls import FCOSRHead_360_CLS
 
 __all__ = [
     'AnchorHead', 'GuidedAnchorHead', 'FeatureAdaption', 'RPNHead',
     'GARPNHead', 'RetinaHead', 'RetinaSepBNHead', 'GARetinaHead', 'SSDHead',
     'FCOSHead', 'RepPointsHead', 'FoveaHead', 'FreeAnchorRetinaHead',
     'ATSSHead',
-    'AnchorHeadRbbox', 'RetinaHeadRbbox_360', 'FCOSRHead'
+    'AnchorHeadRbbox', 'RetinaHeadRbbox_360',
+    'FCOSRHead', 'FCOSRHead_360', 'FCOSRHead_360_CLS'
 ]
