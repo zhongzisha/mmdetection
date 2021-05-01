@@ -345,12 +345,13 @@ def main():
         if os.path.exists(all_preds_filename):
             all_preds = torch.load(all_preds_filename)
         else:
-            driver = gdal.GetDriverByName("GTiff")
-            outdata = driver.Create(save_path, orig_width, orig_height, 3, gdal.GDT_Byte)
-            # options=['COMPRESS=LZW', 'BIGTIFF=YES', 'INTERLEAVE=PIXEL'])
-            # outdata = driver.CreateCopy(save_path, ds, 0, ['COMPRESS=LZW', 'BIGTIFF=YES', 'INTERLEAVE=PIXEL'])
-            outdata.SetGeoTransform(geotransform)  # sets same geotransform as input
-            outdata.SetProjection(projection)  # sets same projection as input
+            if view_img:
+                driver = gdal.GetDriverByName("GTiff")
+                outdata = driver.Create(save_path, orig_width, orig_height, 3, gdal.GDT_Byte)
+                # options=['COMPRESS=LZW', 'BIGTIFF=YES', 'INTERLEAVE=PIXEL'])
+                # outdata = driver.CreateCopy(save_path, ds, 0, ['COMPRESS=LZW', 'BIGTIFF=YES', 'INTERLEAVE=PIXEL'])
+                outdata.SetGeoTransform(geotransform)  # sets same geotransform as input
+                outdata.SetProjection(projection)  # sets same projection as input
 
             all_preds = []
             for oi, (xoffset, yoffset, sub_width, sub_height) in enumerate(offsets):  # left, up
@@ -441,13 +442,16 @@ def main():
                                                save_root=str(save_dir))
                     print('after classify: %d' % (len(newpred)))
 
+                if len(newpred) > 0:
+                    sub_preds = torch.cat(newpred)
+                else:
+                    sub_preds = []
+
                 print('draw dets')
                 im0 = dataset.img0
                 tl = 3 or round(0.002 * (im0.shape[0] + im0.shape[1]) / 2) + 1  # line/font thickness
-                if len(newpred) > 0:
-                    sub_preds = torch.cat(newpred)
 
-                    # sub_preds = sub_preds.cpu().numpy()  #
+                if view_img and len(sub_preds) > 0:
 
                     for i, det in enumerate(sub_preds):  # xyxy, score, label
                         xmin, ymin, xmax, ymax, conf, label = det
@@ -459,11 +463,9 @@ def main():
                             label_txt = f'{names[label]} {conf:.2f}'
                             cv2.putText(im0, label_txt, (int(xmin), int(ymin) - 2), 0, tl / 3,
                                         color=colors[label], thickness=2, lineType=cv2.LINE_AA)
-                else:
-                    sub_preds = []
 
                 print('draw gt')
-                if len(gt_boxes) > 0:
+                if view_img and len(gt_boxes) > 0:
                     for box, label in zip(gt_boxes.cpu().numpy().copy(),
                                           gt_labels.cpu().numpy().copy()):  # xyxy, score, label
                         xmin, ymin, xmax, ymax = box
@@ -483,13 +485,14 @@ def main():
                             # cv2.putText(im0, label_txt, (int(xmin), int(ymin) - 2), 0, tl / 3,
                             #             color=[225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
 
-                print('write image data')
-                for b in range(3):
-                    band = outdata.GetRasterBand(b + 1)
-                    band.WriteArray(im0[:sub_height, :sub_width, b], xoff=xoffset, yoff=yoffset)
-                    band.SetNoDataValue(0)
-                    band.FlushCache()
-                    del band
+                if view_img:
+                    print('write image data')
+                    for b in range(3):
+                        band = outdata.GetRasterBand(b + 1)
+                        band.WriteArray(im0[:sub_height, :sub_width, b], xoff=xoffset, yoff=yoffset)
+                        band.SetNoDataValue(0)
+                        band.FlushCache()
+                        del band
                 # outdata.WriteRaster(xoffset, yoffset, sub_width, sub_height,
                 #                im0[:sub_height, :sub_width].tobytes(),
                 #                sub_width, sub_height, band_list=[1,2,3])
@@ -523,22 +526,23 @@ def main():
                 import gc
                 gc.collect()
 
-            outdata.FlushCache()
-            del outdata
-            del driver
+            if view_img:
+                outdata.FlushCache()
+                del outdata
+                del driver
 
-            final_save_path = save_path.replace('_uncompressed.tif', '.tif')
+                final_save_path = save_path.replace('_uncompressed.tif', '.tif')
 
-            print('compressing the result file')
-            time.sleep(3)
-            command = 'gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -co "BIGTIFF=YES" %s %s' % \
-                      (save_path, final_save_path)
-            os.system(command)
+                print('compressing the result file')
+                time.sleep(3)
+                command = 'gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -co "BIGTIFF=YES" %s %s' % \
+                          (save_path, final_save_path)
+                os.system(command)
 
-            if os.path.exists(final_save_path):
-                time.sleep(2)
-                # os.system('rm -rf %s' % save_path)
-                os.remove(save_path)
+                if os.path.exists(final_save_path):
+                    time.sleep(2)
+                    # os.system('rm -rf %s' % save_path)
+                    os.remove(save_path)
 
 
             all_preds = torch.cat(all_preds)  # xmin, ymin, xmax, ymax, score, label

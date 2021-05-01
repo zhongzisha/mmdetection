@@ -8,12 +8,16 @@ set CONFIG=retinanet_r50_fpn_1x_coco
 set CONFIG=faster_rcnn_r50_fpn_ohem_1x_coco
 set CONFIG=cascade_rcnn_r50_fpn_1x_coco
 set CONFIG=faster_rcnn_r50_fpn_1x_coco
-rem set CONFIG=faster_rcnn_r50_fpn_2x_coco
+set CONFIG=faster_rcnn_r50_fpn_2x_coco
+set CONFIG=faster_rcnn_r50_fpn_ohem_1x_coco
+set CONFIG=cascade_rcnn_r50_fpn_1x_coco
+set CONFIG=faster_rcnn_r50_fpn_1x_coco
+
 
 python demo\detect_gd1024_4classes.py ^
     --source E:\%SUBSET%_list.txt ^
-    --config E:\work_dirs\%CONFIG%\%CONFIG%.py ^
-    --weights E:\work_dirs\%CONFIG%\latest.pth ^
+    --config E:\mmdetection\work_dirs\%CONFIG%\%CONFIG%.py ^
+    --weights E:\mmdetection\work_dirs\%CONFIG%\latest.pth ^
     --score-thres 0.1 ^
     --iou-thres 0.5 ^
     --hw-thres 10 ^
@@ -21,7 +25,7 @@ python demo\detect_gd1024_4classes.py ^
     --gap 256 ^
     --save-txt ^
     --device 0 ^
-    --project E:\frcnn_detect_outputs_%CONFIG%_%SUBSET%_2 ^
+    --project E:\mmdetection\work_dirs\%CONFIG%\outputs_%SUBSET% ^
     --gt-xml-dir E:\gd_gt_combined_4classes\ ^
     --gt-subsize 5120 ^
     --gt-gap 128 ^
