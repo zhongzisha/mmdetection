@@ -556,6 +556,8 @@ def main():
             inds = np.where((hs > hw_thr) & (ws > hw_thr))[0]
             all_preds = all_preds[inds, :]
 
+        all_preds_before = all_preds.clone()
+
         all_preds = all_preds.to(device)
         # 只保留0.5得分的框
         # all_preds = all_preds[all_preds[:, 4] >= 0.5, :]
@@ -846,6 +848,12 @@ def main():
                                      gdal_trans_info=geotransform,
                                      names=names,
                                      colors={0: "255,0,0", 1: "0,0,255", 2: "0,255,255", 3: "255,255,0"})
+        save_predictions_to_envi_xml(preds=all_preds_before,
+                                     save_xml_filename=str(save_dir) + '/' + file_prefix + '_before.xml',
+                                     gdal_proj_info=projection_esri,
+                                     gdal_trans_info=geotransform,
+                                     names=names,
+                                     colors={0: "255,0,0", 1: "0,0,255", 2: "0,255,255", 3: "255,255,0"})
 
     gt_json = str(save_dir) + '/all_gt.json'
     with open(gt_json, 'w') as f:
@@ -886,14 +894,25 @@ def main():
 
     # Print results
     print(s)
+    lines = []
+    lines.append(s+'\n')
     pf = '%20s' + '%12.3g' * 6  # print format
     print(pf % ('all', seen, nt.sum(), mp, mr, map50, map))
+    lines.append(pf % ('all', seen, nt.sum(), mp, mr, map50, map) + '\n')
 
     # Print results per class
     if nc > 1 and len(stats):
         for i, c in enumerate(ap_class):
             print(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]))
+            lines.append(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]) + '\n')
     print('finally, get it done!')
+
+    if len(lines):
+        all_stats_filename = str(save_dir) + '/all_stats.txt'
+        for line in lines:
+            print(line.replace('\n',''))
+        with open(all_stats_filename, 'w') as fp:
+            fp.writelines(lines)
     # import pdb
     # pdb.set_trace()
 
