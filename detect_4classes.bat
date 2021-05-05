@@ -22,6 +22,8 @@ set CONFIG=retinanet_r50_fpn_dc5_2x_coco_lr0.0008
 set CONFIG=faster_rcnn_r101_fpn_dc5_1x_coco_lr0.001
 set CONFIG=faster_rcnn_r50_fpn_dc5_1x_coco_lr0.001_nms
 set CONFIG=faster_rcnn_r50_fpn_dc5_1x_coco_lr0.001_nms2
+set CONFIG=faster_rcnn_r50_fpn_dc5_2x_coco_lr0.001_nms2
+set CONFIG=faster_rcnn_r50_fpn_dc5_ohem_1x_coco_lr0.001_nms2_anchor1
 
 set EPOCHNAME=latest
 set EPOCHNAME=epoch_9
