@@ -334,7 +334,7 @@ def main():
 
         # 先计算可用内存，如果可以放得下，就不用分块了
         avaialble_mem_bytes = psutil.virtual_memory().available
-        if orig_width * orig_height * ds.RasterCount < 0.8 * avaialble_mem_bytes:
+        if False:# orig_width * orig_height * ds.RasterCount < 0.8 * avaialble_mem_bytes:
             offsets = [[0, 0, orig_width, orig_height]]
         else:
             # 根据big_subsize计算子块的起始偏移
@@ -854,6 +854,8 @@ def main():
                                      gdal_trans_info=geotransform,
                                      names=names,
                                      colors={0: "255,0,0", 1: "0,0,255", 2: "0,255,255", 3: "255,255,0"})
+
+
 
     gt_json = str(save_dir) + '/all_gt.json'
     with open(gt_json, 'w') as f:
