@@ -45,8 +45,10 @@ def plot_curve(log_dicts, args):
     metrics = args.keys
 
     num_metrics = len(metrics)
+    num_maximum_mAP_epoch = -1
     for i, log_dict in enumerate(log_dicts):
         epochs = list(log_dict.keys())
+        num_maximum_mAP_epoch = max(epochs)
         for j, metric in enumerate(metrics):
             print(f'plot curve of {args.json_logs[i]}, metric is {metric}')
             if metric not in log_dict[epochs[0]]:
@@ -62,6 +64,8 @@ def plot_curve(log_dicts, args):
                 ax.set_xticks(xs)
                 plt.xlabel('epoch')
                 plt.plot(xs, ys, label=legend[i * num_metrics + j], marker='o')
+                # MODIEIFIED by zzs, to get the epoch number for subsequent bash processing
+                num_maximum_mAP_epoch = np.argmax(np.array(ys)) + 1
             else:
                 xs = []
                 ys = []
@@ -84,8 +88,11 @@ def plot_curve(log_dicts, args):
     if args.out is None:
         plt.show()
     else:
-        print(f'save curve to: {args.out}')
-        plt.savefig(args.out)
+        out_filename = args.out
+        if num_maximum_mAP_epoch > 0:
+            out_filename = out_filename.replace('.png', '_%d.png' % (num_maximum_mAP_epoch))
+        print(f'save curve to: {out_filename}')
+        plt.savefig(out_filename)
         plt.cla()
 
 

@@ -32,9 +32,10 @@ set CONFIG=faster_rcnn_r50_fpn_dc5_1x_coco_lr0.001
 rem set CONFIG=faster_rcnn_r50_fpn_dc5_1x_coco_lr0.001_800
 rem set CONFIG=faster_rcnn_r50_fpn_dc5_1x_coco_lr0.0025_800_anchor1
 set CONFIG=faster_rcnn_r50_fpn_dc5_1x_coco_lr0.0025_800_anchor1_bs2
+set CONFIG=faster_rcnn_r50_fpn_dc5_2x_coco_lr0.001_newAug2
 
 set EPOCHNAME=latest
-set EPOCHNAME=epoch_10
+set EPOCHNAME=epoch_23
 
 
 python demo\detect_gd1024_4classes.py ^
