@@ -277,53 +277,55 @@ def main():
         if gt_xml_dir != '' and os.path.exists(gt_xml_dir):
             # 加载gt，分两部分，一部分是txt格式的。一部分是esri xml格式的
             gt_boxes1, gt_labels1 = load_gt_from_txt(os.path.join(gt_xml_dir, file_prefix + '_gt.txt'))
-            gt_boxes2, gt_labels2 = load_gt_from_esri_xml(os.path.join(gt_xml_dir, file_prefix + '_gt_new.xml'),
+            gt_boxes2, gt_labels2 = load_gt_from_esri_xml(os.path.join(gt_xml_dir, file_prefix + '_gt_5.xml'),
                                                           gdal_trans_info=geotransform)
             gt_boxes = gt_boxes1 + gt_boxes2
             gt_labels = gt_labels1 + gt_labels2
-            all_boxes = np.concatenate([np.array(gt_boxes, dtype=np.float32).reshape(-1, 4),
-                                        np.array(gt_labels, dtype=np.float32).reshape(-1, 1)], axis=1)
-            print('all_boxes')
-            print(all_boxes)
 
-            # 每个类进行nms
-            tmp_boxes = []
-            tmp_labels = []
-            for label in [1, 2, 3, 4]:
-                idx = np.where(all_boxes[:, 4] == label)[0]
-                if len(idx) > 0:
-                    boxes_thisclass = all_boxes[idx, :4]
-                    labels_thisclass = all_boxes[idx, 4]
-                    dets = np.concatenate([boxes_thisclass.astype(np.float32),
-                                           0.99 * np.ones_like(idx, dtype=np.float32).reshape([-1, 1])], axis=1)
-                    keep = py_cpu_nms(dets, thresh=0.5)
-                    tmp_boxes.append(boxes_thisclass[keep])
-                    tmp_labels.append(labels_thisclass[keep])
-            gt_boxes = np.concatenate(tmp_boxes)
-            gt_labels = np.concatenate(tmp_labels)
+            if len(gt_boxes) > 0:
+                all_boxes = np.concatenate([np.array(gt_boxes, dtype=np.float32).reshape(-1, 4),
+                                            np.array(gt_labels, dtype=np.float32).reshape(-1, 1)], axis=1)
+                print('all_boxes')
+                print(all_boxes)
 
-            # # 把那些太小的去掉试试
-            # gt_w = gt_boxes[:, 2] - gt_boxes[:, 0]
-            # gt_h = gt_boxes[:, 3] - gt_boxes[:, 1]
-            # gt_l = gt_labels.copy()
-            #
-            # print('len(gt_boxes): ', len(gt_boxes))
-            # print('len(gt_labels): ', len(gt_labels))
-            #
-            # inds = np.where((gt_l == 1) & (gt_w <= 100) & (gt_h <= 100))[0]
-            # gt_boxes = np.delete(gt_boxes, inds, axis=0)
-            # gt_labels = np.delete(gt_labels.reshape([-1, 1]), inds, axis=0).reshape([-1])
-            #
-            # print('len(gt_boxes) after: ', len(gt_boxes))
-            # print('len(gt_labels) after: ', len(gt_labels))
-            # import pdb
-            # pdb.set_trace()
+                # 每个类进行nms
+                tmp_boxes = []
+                tmp_labels = []
+                for label in [1, 2, 3, 4]:
+                    idx = np.where(all_boxes[:, 4] == label)[0]
+                    if len(idx) > 0:
+                        boxes_thisclass = all_boxes[idx, :4]
+                        labels_thisclass = all_boxes[idx, 4]
+                        dets = np.concatenate([boxes_thisclass.astype(np.float32),
+                                               0.99 * np.ones_like(idx, dtype=np.float32).reshape([-1, 1])], axis=1)
+                        keep = py_cpu_nms(dets, thresh=0.5)
+                        tmp_boxes.append(boxes_thisclass[keep])
+                        tmp_labels.append(labels_thisclass[keep])
+                gt_boxes = np.concatenate(tmp_boxes)
+                gt_labels = np.concatenate(tmp_labels)
 
-            gt_boxes = torch.from_numpy(gt_boxes).to(device)
-            gt_labels = torch.from_numpy(gt_labels).to(device)
+                # # 把那些太小的去掉试试
+                # gt_w = gt_boxes[:, 2] - gt_boxes[:, 0]
+                # gt_h = gt_boxes[:, 3] - gt_boxes[:, 1]
+                # gt_l = gt_labels.copy()
+                #
+                # print('len(gt_boxes): ', len(gt_boxes))
+                # print('len(gt_labels): ', len(gt_labels))
+                #
+                # inds = np.where((gt_l == 1) & (gt_w <= 100) & (gt_h <= 100))[0]
+                # gt_boxes = np.delete(gt_boxes, inds, axis=0)
+                # gt_labels = np.delete(gt_labels.reshape([-1, 1]), inds, axis=0).reshape([-1])
+                #
+                # print('len(gt_boxes) after: ', len(gt_boxes))
+                # print('len(gt_labels) after: ', len(gt_labels))
+                # import pdb
+                # pdb.set_trace()
 
-            if len(gt_boxes) == 0 or len(gt_boxes) != len(gt_labels):
-                continue
+                gt_boxes = torch.from_numpy(gt_boxes).to(device)
+                gt_labels = torch.from_numpy(gt_labels).to(device)
+            else:
+                gt_boxes = []
+                gt_labels = []
         else:
             gt_boxes = []
             gt_labels = []
@@ -748,7 +750,6 @@ def main():
             all_preds_cpu = np.concatenate([all_preds_cpu, all_preds_small, all_preds_mid], axis=0)
             all_preds = torch.from_numpy(all_preds_cpu).to(all_preds.device)
 
-
         nl = len(gt_labels)
         if nl:
             for box, label in zip(gt_boxes, gt_labels):
@@ -804,10 +805,11 @@ def main():
 
         # Assign all predictions as incorrect
         seen += 1
-        correct = torch.zeros(all_preds.shape[0], niou, dtype=torch.bool, device=device)
-        gt_labels = gt_labels - 1
-        tcls = gt_labels.tolist() if nl else []  # target class
-        if nl:
+
+        if nl: # if have gt_boxes
+            correct = torch.zeros(all_preds.shape[0], niou, dtype=torch.bool, device=device)
+            gt_labels = gt_labels - 1
+            tcls = gt_labels.tolist() if nl else []  # target class
             detected = []  # target indices
             tcls_tensor = gt_labels.reshape(-1)
 
@@ -839,8 +841,8 @@ def main():
                             if len(detected) == nl:  # all targets already located in image
                                 break
 
-        # Append statistics (correct, conf, pcls, tcls)
-        stats.append((correct.cpu(), all_preds[:, 4].cpu(), all_preds[:, 5].cpu(), tcls))
+            # Append statistics (correct, conf, pcls, tcls)
+            stats.append((correct.cpu(), all_preds[:, 4].cpu(), all_preds[:, 5].cpu(), tcls))
 
         save_predictions_to_envi_xml(preds=all_preds,
                                      save_xml_filename=str(save_dir) + '/' + file_prefix + '.xml',
@@ -856,67 +858,68 @@ def main():
                                      colors={0: "255,0,0", 1: "0,0,255", 2: "0,255,255", 3: "255,255,0"})
 
 
-
-    gt_json = str(save_dir) + '/all_gt.json'
-    with open(gt_json, 'w') as f:
-        json.dump(gt_json_dict, f, indent=4)
     pred_json = str(save_dir) + '/all_preds.json'
     with open(pred_json, 'w') as f:
         json.dump(jdict, f, indent=4)
 
-    try:  # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
-        from pycocotools.coco import COCO
-        from pycocotools.cocoeval import COCOeval
+    if nl:  # if have gt_boxes
+        gt_json = str(save_dir) + '/all_gt.json'
+        with open(gt_json, 'w') as f:
+            json.dump(gt_json_dict, f, indent=4)
 
-        anno = COCO(gt_json)  # init annotations api
-        pred = anno.loadRes(pred_json)  # init predictions api
-        eval = COCOeval(anno, pred, 'bbox')
-        eval.evaluate()
-        eval.accumulate()
-        eval.summarize()
-        map, map50 = eval.stats[:2]  # update results (mAP@0.5:0.95, mAP@0.5)
-        print('results from coco: ', map, map50)
-    except Exception as e:
-        print(f'pycocotools unable to run: {e}')
+        try:  # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
+            from pycocotools.coco import COCO
+            from pycocotools.cocoeval import COCOeval
 
-    confusion_matrix.plot(save_dir=save_dir, names=list(names.values()))
-    # Compute statistics
-    stats = [np.concatenate(x, 0) for x in zip(*stats)]  # to numpy
-    if len(stats) and stats[0].any():
-        p, r, ap, f1, ap_class = ap_per_class(*stats, plot=is_plot, save_dir=save_dir, names=names)
+            anno = COCO(gt_json)  # init annotations api
+            pred = anno.loadRes(pred_json)  # init predictions api
+            eval = COCOeval(anno, pred, 'bbox')
+            eval.evaluate()
+            eval.accumulate()
+            eval.summarize()
+            map, map50 = eval.stats[:2]  # update results (mAP@0.5:0.95, mAP@0.5)
+            print('results from coco: ', map, map50)
+        except Exception as e:
+            print(f'pycocotools unable to run: {e}')
 
-        print('ap: ', ap)
+        confusion_matrix.plot(save_dir=save_dir, names=list(names.values()))
+        # Compute statistics
+        stats = [np.concatenate(x, 0) for x in zip(*stats)]  # to numpy
+        if len(stats) and stats[0].any():
+            p, r, ap, f1, ap_class = ap_per_class(*stats, plot=is_plot, save_dir=save_dir, names=names)
 
-        ap50, ap = ap[:, 0], ap.mean(1)  # AP@0.5, AP@0.5:0.95
-        mp, mr, map50, map = p.mean(), r.mean(), ap50.mean(), ap.mean()
-        print(mp, mr, map50, map)
-        nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
-    else:
-        nt = torch.zeros(1)
+            print('ap: ', ap)
 
-    # Print results
-    print(s)
-    lines = []
-    lines.append(s+'\n')
-    pf = '%20s' + '%12.3g' * 6  # print format
-    print(pf % ('all', seen, nt.sum(), mp, mr, map50, map))
-    lines.append(pf % ('all', seen, nt.sum(), mp, mr, map50, map) + '\n')
+            ap50, ap = ap[:, 0], ap.mean(1)  # AP@0.5, AP@0.5:0.95
+            mp, mr, map50, map = p.mean(), r.mean(), ap50.mean(), ap.mean()
+            print(mp, mr, map50, map)
+            nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
+        else:
+            nt = torch.zeros(1)
 
-    # Print results per class
-    if nc > 1 and len(stats):
-        for i, c in enumerate(ap_class):
-            print(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]))
-            lines.append(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]) + '\n')
-    print('finally, get it done!')
+        # Print results
+        print(s)
+        lines = []
+        lines.append(s+'\n')
+        pf = '%20s' + '%12.3g' * 6  # print format
+        print(pf % ('all', seen, nt.sum(), mp, mr, map50, map))
+        lines.append(pf % ('all', seen, nt.sum(), mp, mr, map50, map) + '\n')
 
-    if len(lines):
-        all_stats_filename = str(save_dir) + '/all_stats.txt'
-        for line in lines:
-            print(line.replace('\n',''))
-        with open(all_stats_filename, 'w') as fp:
-            fp.writelines(lines)
-    # import pdb
-    # pdb.set_trace()
+        # Print results per class
+        if nc > 1 and len(stats):
+            for i, c in enumerate(ap_class):
+                print(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]))
+                lines.append(pf % (names[c], seen, nt[c], p[i], r[i], ap50[i], ap[i]) + '\n')
+        print('finally, get it done!')
+
+        if len(lines):
+            all_stats_filename = str(save_dir) + '/all_stats.txt'
+            for line in lines:
+                print(line.replace('\n',''))
+            with open(all_stats_filename, 'w') as fp:
+                fp.writelines(lines)
+        # import pdb
+        # pdb.set_trace()
 
 
 if __name__ == '__main__':

@@ -2,11 +2,11 @@
 
 rem --cls-weights E:/cls_results/resnet50/bs32_lr0.001000_epochs20/best.pt
 set PYTHONPATH=F:\gd\
-set SUBSET=train
+set SUBSET=val
 set IMGSIZE=800
 set GAP=32
-rem set IMGSIZE=1024
-rem set GAP=256
+set IMGSIZE=1024
+set GAP=256
 set NET=yolov5l_768_4classes
 set CONFIG=retinanet_r50_fpn_1x_coco
 set CONFIG=faster_rcnn_r50_fpn_ohem_1x_coco
@@ -50,7 +50,7 @@ python demo\detect_gd1024_4classes.py ^
     --save-txt ^
     --device 0 ^
     --project E:\mmdetection\work_dirs\%CONFIG%\outputs_%SUBSET%_%IMGSIZE%_%GAP%_%EPOCHNAME% ^
-    --gt-xml-dir E:\gd_gt_combined_4classes\ ^
+    --gt-xml-dir F:\gddata\aerial\ ^
     --gt-subsize 5120 ^
     --gt-gap 128 ^
     --big-subsize 10240 ^
