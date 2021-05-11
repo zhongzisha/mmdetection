@@ -10,8 +10,8 @@ WIN10_GD_CODE_ROOT=F:/gd
 WIN10_GD_DATA_ROOT=F:/gddata/aerial
 WIN10_GD_CODE_DRIVE=${WIN10_GD_CODE_ROOT%/*}
 
-#./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
-#  --work-dir ${WORKDIR} || exit
+./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
+  --work-dir ${WORKDIR} || exit
 
 ## LOG_JSON_FILE=`ls -alt ${WORKDIR}/*.log.json | cut -f10- -d" "`     #  this is not good !!!
 LOG_JSON_FILE=`ls -alt ${WORKDIR}/*.log.json | head -n 1 | grep -oE '[^ ]+$'`
@@ -45,7 +45,7 @@ ${WIN10_IP}:${WIN10_WORK_ROOT}/${CONFIG}
 
 PARAMS=$(cat <<-END
 set PYTHONPATH=${WIN10_GD_CODE_ROOT}\n
-set SUBSET=train\n
+set SUBSET=val\n
 set IMGSIZE=800\n
 set GAP=32\n
 set CONFIG=${CONFIG}\n
@@ -75,6 +75,7 @@ END
 
 echo -e $PARAMS > ${WORKDIR}/run_test.bat
 scp ${WORKDIR}/run_test.bat ${WIN10_IP}:${WIN10_WORK_ROOT}/${CONFIG}
+echo "${WIN10_WORK_ROOT}/${CONFIG}"
 
 
 
