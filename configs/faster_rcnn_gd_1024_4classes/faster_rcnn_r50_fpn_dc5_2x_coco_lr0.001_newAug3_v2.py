@@ -76,9 +76,11 @@ data = dict(
         datasets=[val_data1, val_data2]
     ),
     test=dict(
-        type='ConcatDataset',
-        datasets=[test_data1, test_data2]
-    ))
+        classes=classes,
+        type='Gd1024Dataset',
+        ann_file='data/gd_newAug10_Rot0_4classes/val/val.json',
+        img_prefix='data/gd_newAug10_Rot0_4classes/val/images/',
+        pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 model = dict(
     type='FasterRCNN',

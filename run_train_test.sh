@@ -10,8 +10,8 @@ WIN10_GD_CODE_ROOT=F:/gd
 WIN10_GD_DATA_ROOT=F:/gddata/aerial
 WIN10_GD_CODE_DRIVE=${WIN10_GD_CODE_ROOT%/*}
 
-./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
-  --work-dir ${WORKDIR} || exit
+#./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
+#  --work-dir ${WORKDIR} || exit
 
 ## LOG_JSON_FILE=`ls -alt ${WORKDIR}/*.log.json | cut -f10- -d" "`     #  this is not good !!!
 LOG_JSON_FILE=`ls -alt ${WORKDIR}/*.log.json | head -n 1 | grep -oE '[^ ]+$'`
@@ -20,7 +20,9 @@ echo $LOG_JSON_FILE
 echo $LOG_FILE
 
 python ./tools/analysis_tools/analyze_logs.py plot_curve \
-  ${LOG_JSON_FILE} --out ${WORKDIR}/log_curve.png || exit
+  --keys 0_bbox_mAP \
+  --out ${WORKDIR}/log_curve.png \
+   ${LOG_JSON_FILE} || exit
 
 LOG_CURVE_FILE=`ls -alt ${WORKDIR}/log_curve*.png | head -n 1 | grep -oE '[^ ]+$'`
 echo $LOG_CURVE_FILE
@@ -34,9 +36,9 @@ echo $epoch_num
 CKPT_FILE=$WORKDIR/epoch_${epoch_num}.pth
 echo $WORKDIR/epoch_${epoch_num}.pth
 
-# the following is optional
-python tools/test.py $WORKDIR/$CONFIG.py $CKPT_FILE --eval bbox \
-  --show-dir ${WORKDIR}/epoch_${epoch_num}_val || exit
+## the following is optional
+#python tools/test.py $WORKDIR/$CONFIG.py $CKPT_FILE --eval bbox \
+#  --show-dir ${WORKDIR}/epoch_${epoch_num}_val || exit
 
 # faster_rcnn_r50_fpn_dc5_1x_coco_lr0.001_newAug2
 ssh ${WIN10_IP} powershell -c mkdir ${WIN10_WORK_ROOT}/${CONFIG};
