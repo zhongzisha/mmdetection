@@ -1,13 +1,14 @@
 if [ -z ${WIN10_IP} ]; then
   echo "at first, please define the environmental variable WIN10_IP"
+  echo "note that this script is for WIN10 SSD Ubuntu Dual system"
   exit
 fi
 
 CONFIG=$1
 WORKDIR=/media/ubuntu/Temp/gd/mmdetection/$CONFIG
-WIN10_WORK_ROOT=E:/mmdetection/work_dirs
-WIN10_GD_CODE_ROOT=F:/gd
-WIN10_GD_DATA_ROOT=F:/gddata/aerial
+WIN10_WORK_ROOT=/media/ubuntu/Data/mmdetection/work_dirs
+WIN10_GD_CODE_ROOT=/media/ubuntu/Documents/gd
+WIN10_GD_DATA_ROOT=/media/ubuntu/Documents/gddata/aerial
 WIN10_GD_CODE_DRIVE=${WIN10_GD_CODE_ROOT%/*}
 
 CUDA_VISIBLE_DEVICES=0,1 ./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
@@ -42,42 +43,41 @@ echo $WORKDIR/epoch_${epoch_num}.pth
 #  --show-dir ${WORKDIR}/epoch_${epoch_num}_val || exit
 
 # faster_rcnn_r50_fpn_dc5_1x_coco_lr0.001_newAug2
-ssh ${WIN10_IP} powershell -c mkdir ${WIN10_WORK_ROOT}/${CONFIG};
+ssh ${WIN10_IP} mkdir ${WIN10_WORK_ROOT}/${CONFIG};
 scp $LOG_FILE $LOG_JSON_FILE $LOG_CURVE_FILE $CKPT_FILE ${CKPT_FILE_LATEST} $WORKDIR/$CONFIG.py \
 ${WIN10_IP}:${WIN10_WORK_ROOT}/${CONFIG}
 
 PARAMS=$(cat <<-END
-set PYTHONPATH=${WIN10_GD_CODE_ROOT}\n
-set SUBSET=val\n
-set IMGSIZE=800\n
-set GAP=32\n
-set CONFIG=${CONFIG}\n
-set EPOCHNAME=epoch_${epoch_num}\n
-cd ${WIN10_GD_CODE_ROOT}/mmdetection/\n
-${WIN10_GD_CODE_DRIVE}\n
-python demo/detect_gd1024_4classes.py ^\n
-    --source E:/%SUBSET%_list.txt ^\n
-    --config ${WIN10_WORK_ROOT}/%CONFIG%/%CONFIG%.py ^\n
-    --weights ${WIN10_WORK_ROOT}/%CONFIG%/%EPOCHNAME%.pth ^\n
-    --score-thres 0.1 ^\n
-    --iou-thres 0.5 ^\n
-    --hw-thres 10 ^\n
-    --img-size %IMGSIZE% ^\n
-    --gap %GAP% ^\n
-    --save-txt ^\n
-    --device 0 ^\n
-    --project ${WIN10_WORK_ROOT}/%CONFIG%/outputs_%SUBSET%_%IMGSIZE%_%GAP%_%EPOCHNAME% ^\n
-    --gt-xml-dir ${WIN10_GD_DATA_ROOT} ^\n
-    --gt-subsize 5120 ^\n
-    --gt-gap 128 ^\n
-    --big-subsize 10240 ^\n
-    --batchsize 4 ^\n
-    --view-img\n
+export PYTHONPATH=${WIN10_GD_CODE_ROOT}:$PYTHONPATH \n
+export SUBSET=val \n
+export IMGSIZE=1024 \n
+export GAP=32 \n
+export CONFIG=${CONFIG} \n
+export EPOCHNAME=epoch_${epoch_num} \n
+cd ${WIN10_GD_CODE_ROOT}/mmdetection/ \n
+python demo/detect_gd1024_4classes.py \\ \n
+    --source /media/ubuntu/Data/\${SUBSET}_list_ssd.txt \\ \n
+    --config ${WIN10_WORK_ROOT}/\${CONFIG}/\${CONFIG}.py \\ \n
+    --weights ${WIN10_WORK_ROOT}/\${CONFIG}/\${EPOCHNAME}.pth \\ \n
+    --score-thres 0.1 \\ \n
+    --iou-thres 0.5 \\ \n
+    --hw-thres 10 \\ \n
+    --img-size \${IMGSIZE} \\ \n
+    --gap ${GAP} \\ \n
+    --save-txt \\ \n
+    --device 0 \\ \n
+    --project ${WIN10_WORK_ROOT}/\${CONFIG}/outputs_\${SUBSET}_\${IMGSIZE}_\${GAP}_\${EPOCHNAME} \\ \n
+    --gt-xml-dir ${WIN10_GD_DATA_ROOT} \\ \n
+    --gt-subsize 5120 \\ \n
+    --gt-gap 128 \\\n
+    --big-subsize 10240 \\ \n
+    --batchsize 4 \\ \n
+    --view-img
 END
 )
 
-echo -e $PARAMS > ${WORKDIR}/run_test.bat
-scp ${WORKDIR}/run_test.bat ${WIN10_IP}:${WIN10_WORK_ROOT}/${CONFIG}
+echo -e $PARAMS > ${WORKDIR}/run_test.sh
+scp ${WORKDIR}/run_test.sh ${WIN10_IP}:${WIN10_WORK_ROOT}/${CONFIG}
 echo "${WIN10_WORK_ROOT}/${CONFIG}"
 
 
