@@ -49,7 +49,7 @@ ${WIN10_IP}:${WIN10_WORK_ROOT}/${CONFIG}
 PARAMS=$(cat <<-END
 set PYTHONPATH=${WIN10_GD_CODE_ROOT}\n
 set SUBSET=val\n
-set IMGSIZE=800\n
+set IMGSIZE=1024\n
 set GAP=32\n
 set CONFIG=${CONFIG}\n
 set EPOCHNAME=epoch_${epoch_num}\n

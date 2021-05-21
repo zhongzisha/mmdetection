@@ -331,12 +331,13 @@ def main():
             gt_labels = []
 
         if len(gt_boxes) == 0:
-            import pdb
-            pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
+            print('no gt boxes')
 
         # 先计算可用内存，如果可以放得下，就不用分块了
         avaialble_mem_bytes = psutil.virtual_memory().available
-        if False:# orig_width * orig_height * ds.RasterCount < 0.8 * avaialble_mem_bytes:
+        if False:  # orig_width * orig_height * ds.RasterCount < 0.8 * avaialble_mem_bytes:
             offsets = [[0, 0, orig_width, orig_height]]
         else:
             # 根据big_subsize计算子块的起始偏移
@@ -546,10 +547,13 @@ def main():
                     # os.system('rm -rf %s' % save_path)
                     os.remove(save_path)
 
+            if len(all_preds) > 0:
+                all_preds = torch.cat(all_preds)  # xmin, ymin, xmax, ymax, score, label
 
-            all_preds = torch.cat(all_preds)  # xmin, ymin, xmax, ymax, score, label
+                torch.save(all_preds, all_preds_filename)
 
-            torch.save(all_preds, all_preds_filename)
+        if len(all_preds) == 0:
+            continue
 
         # 过滤那些框的宽高不合理的框
         if hw_thr > 0 and len(all_preds) > 0:
