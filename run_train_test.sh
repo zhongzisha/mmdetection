@@ -10,8 +10,8 @@ WIN10_GD_CODE_ROOT=F:/gd
 WIN10_GD_DATA_ROOT=F:/gddata/aerial
 WIN10_GD_CODE_DRIVE=${WIN10_GD_CODE_ROOT%/*}
 
-CUDA_VISIBLE_DEVICES=0,1 ./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
-  --work-dir ${WORKDIR} || exit
+#CUDA_VISIBLE_DEVICES=0,1 ./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
+#  --work-dir ${WORKDIR} || exit
 
 ## LOG_JSON_FILE=`ls -alt ${WORKDIR}/*.log.json | cut -f10- -d" "`     #  this is not good !!!
 LOG_JSON_FILE=`ls -alt ${WORKDIR}/*.log.json | head -n 1 | grep -oE '[^ ]+$'`
@@ -71,8 +71,7 @@ python demo/detect_gd1024_4classes.py ^\n
     --gt-subsize 5120 ^\n
     --gt-gap 128 ^\n
     --big-subsize 10240 ^\n
-    --batchsize 4 ^\n
-    --view-img\n
+    --batchsize 4
 END
 )
 
