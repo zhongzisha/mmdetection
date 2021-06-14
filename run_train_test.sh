@@ -7,7 +7,7 @@ CONFIG=$1
 WORKDIR=/media/ubuntu/Temp/gd/mmdetection/$CONFIG
 WIN10_WORK_ROOT=E:/mmdetection/work_dirs
 WIN10_GD_CODE_ROOT=F:/gd
-WIN10_GD_DATA_ROOT=F:/gddata/aerial
+WIN10_GD_DATA_ROOT=G:/gddata/aerial
 WIN10_GD_CODE_DRIVE=${WIN10_GD_CODE_ROOT%/*}
 
 #CUDA_VISIBLE_DEVICES=0,1 ./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/$CONFIG.py 2 \
