@@ -99,20 +99,20 @@ def apply_classifier(x, model, img, im0, ti=0, oi=0, save_root='./'):
                 logits = model(ims)
                 prob_op = nn.Softmax(dim=1)
                 probs = prob_op(logits)
-                pred_0 = logits.argmax(1)  # classifier prediction
-                pred_0 = 1 - pred_0  # 0 is pos, 1 is neg
+                preds = logits.argmax(1)  # classifier prediction, 0 is neg, 1 is pos
                 print('probs', probs)
 
             ii = 0
             newd = []
             for j, a in enumerate(d):  # per item
                 if pred_cls1[j] == 2:   # 0, 1, 2, 3. 2 is the GanTa
-                    if pred_0[ii] == 0:
-                        newd.append(x[i][j])
+                    if preds[ii] == 1 or d[j, 4] > 0.5:
+                        newd.append(x[i][j])  # 如果之前检测结果是杆塔且此次分类结果也是杆塔，则加入到结果集合中
                     # if probs[ii, 1] > 0.001:  # TODO 阈值需要设定，这里用阈值是因为发现有的正样本分成了负样本
                     #     newd.append(x[i][j])
                     else:
                         # 这里保存那些检测为杆塔但是分类不是杆塔的图片
+                        # 文件名中第一个为杆塔的概率，第二个为分类器分类为杆塔的概率
                         cv2.imwrite('%s/%d_%f_%f.jpg' % (save_dir, j, d[j, 4], probs[ii, 1]),
                                     (ims_copy[ii] * 255).astype(np.uint8).transpose([1, 2, 0]))
                         pass
@@ -223,7 +223,7 @@ def main():
 
     inst_count = 1
 
-    for ti in range(5, len(tiffiles)):
+    for ti in range(len(tiffiles)):
         image_id = ti + 1
         tiffile = tiffiles[ti]
         file_prefix = tiffile.split(os.sep)[-1].replace('.tif', '')
@@ -537,6 +537,7 @@ def main():
         if len(all_preds) == 0:
             continue
 
+        all_preds = all_preds.cpu()
         # 过滤那些框的宽高不合理的框
         if hw_thr > 0 and len(all_preds) > 0:
             ws = all_preds[:, 2] - all_preds[:, 0]
