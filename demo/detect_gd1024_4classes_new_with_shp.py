@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 from mmdet.apis import inference_detector, init_detector, show_result_pyplot
-import glob,os
+import glob, os
 import time
 import random
 import copy
@@ -21,6 +21,7 @@ import psutil
 from myutils import load_gt_from_txt, load_gt_from_esri_xml, py_cpu_nms, \
     compute_offsets, LoadImages, box_iou, ap_per_class1, ConfusionMatrix1
 from myutils import save_predictions_to_envi_xml_and_shp as save_predictions_to_envi_xml
+from myutils import xyxy2xywh, xywh2xyxy
 
 
 def load_classifier(name='resnet101', n=2):
@@ -40,26 +41,6 @@ def load_classifier(name='resnet101', n=2):
     model.fc.weight = nn.Parameter(torch.zeros(n, filters), requires_grad=True)
     model.fc.out_features = n
     return model
-
-
-def xyxy2xywh(x):
-    # Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] where xy1=top-left, xy2=bottom-right
-    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
-    y[:, 0] = (x[:, 0] + x[:, 2]) / 2  # x center
-    y[:, 1] = (x[:, 1] + x[:, 3]) / 2  # y center
-    y[:, 2] = x[:, 2] - x[:, 0]  # width
-    y[:, 3] = x[:, 3] - x[:, 1]  # height
-    return y
-
-
-def xywh2xyxy(x):
-    # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
-    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
-    y[:, 0] = x[:, 0] - x[:, 2] / 2  # top left x
-    y[:, 1] = x[:, 1] - x[:, 3] / 2  # top left y
-    y[:, 2] = x[:, 0] + x[:, 2] / 2  # bottom right x
-    y[:, 3] = x[:, 1] + x[:, 3] / 2  # bottom right y
-    return y
 
 
 def apply_classifier(x, model, img, im0, ti=0, oi=0, save_root='./'):
@@ -113,7 +94,7 @@ def apply_classifier(x, model, img, im0, ti=0, oi=0, save_root='./'):
                     ims.append(im)
             if len(ims) > 0:
                 ims_copy = copy.deepcopy(ims)
-                ims = torch.Tensor(ims).to(d.device)
+                ims = torch.Tensor(ims).to(device)
                 ims.sub_(mean).div_(std)
                 logits = model(ims)
                 prob_op = nn.Softmax(dim=1)
@@ -125,7 +106,7 @@ def apply_classifier(x, model, img, im0, ti=0, oi=0, save_root='./'):
             ii = 0
             newd = []
             for j, a in enumerate(d):  # per item
-                if pred_cls1[j] == 2:
+                if pred_cls1[j] == 2:   # 0, 1, 2, 3. 2 is the GanTa
                     if pred_0[ii] == 0:
                         newd.append(x[i][j])
                     # if probs[ii, 1] > 0.001:  # TODO 阈值需要设定，这里用阈值是因为发现有的正样本分成了负样本
@@ -133,7 +114,7 @@ def apply_classifier(x, model, img, im0, ti=0, oi=0, save_root='./'):
                     else:
                         # 这里保存那些检测为杆塔但是分类不是杆塔的图片
                         cv2.imwrite('%s/%d_%f_%f.jpg' % (save_dir, j, d[j, 4], probs[ii, 1]),
-                                    (ims_copy[ii]*255).astype(np.uint8).transpose([1,2,0]))
+                                    (ims_copy[ii] * 255).astype(np.uint8).transpose([1, 2, 0]))
                         pass
                     ii += 1
                 else:
@@ -191,8 +172,8 @@ def main():
         save_dir.mkdir(parents=True, exist_ok=True)
 
     names = {0: '1', 1: '2', 2: '3', 3: '4'}
-    names = {0: 'GanTa', 1:'JueYuanZi'}
-    colors = {name_id:[random.randint(0, 255) for _ in range(3)] for name_id in names.keys()}
+    names = {0: 'GanTa', 1: 'JueYuanZi'}
+    colors = {name_id: [random.randint(0, 255) for _ in range(3)] for name_id in names.keys()}
     shown_labels = [0, 1, 2, 3]  # 只显示中大型杆塔和绝缘子
     label_map = {3: 1, 4: 2}
 
@@ -378,7 +359,6 @@ def main():
                 sub_preds = []
                 for img in dataset:
 
-
                     # cv2.imwrite('test1.png', img[0])
                     # cv2.imwrite('test2.png', img[1])
 
@@ -422,7 +402,8 @@ def main():
                             bboxes = bboxes[inds, :]
                             pred_labels = pred_labels[inds]
 
-                        pred = torch.from_numpy(np.concatenate([bboxes, pred_labels.reshape(-1, 1)], axis=1))  # xyxy,score,cls
+                        pred = torch.from_numpy(
+                            np.concatenate([bboxes, pred_labels.reshape(-1, 1)], axis=1)).to(device)  # xyxy,score,cls
 
                         # pred is [xyxy, conf, pred_label]
                         pred_per_image.append(pred)
@@ -483,7 +464,7 @@ def main():
                             print([xmin, ymin, xmax, ymax, label])
                             label = int(label) - 1
                             cv2.rectangle(im0, (int(xmin), int(ymin)), (int(xmax), int(ymax)),
-                                          color=(255,255,255),
+                                          color=(255, 255, 255),
                                           thickness=2, lineType=cv2.LINE_AA)
                             # label_txt = f'{names[label]} {conf:.2f}'
                             # cv2.putText(im0, label_txt, (int(xmin), int(ymin) - 2), 0, tl / 3,
@@ -595,21 +576,21 @@ def main():
             # 对杆塔目标进行聚类合并，减少一个杆塔多个预测框
             all_preds_cpu = all_preds.cpu().numpy()
 
-            idx = np.where(all_preds_cpu[:, 5] == 0)[0]   # 0:小杆塔，1:中杆塔，2:大杆塔
+            idx = np.where(all_preds_cpu[:, 5] == 0)[0]  # 0:小杆塔，1:中杆塔，2:大杆塔
             all_preds_small = all_preds_cpu[idx, :]
             all_preds_small = all_preds_small[all_preds_small[:, 4] > 0.5]  # TODO 这里阈值需要设定
             if len(all_preds_small) == 0:
                 all_preds_small = np.empty((0, 6), dtype=all_preds_cpu.dtype)
 
-            idx = np.where(all_preds_cpu[:, 5] == 1)[0]   # 0:小杆塔，1:中杆塔，2:大杆塔
+            idx = np.where(all_preds_cpu[:, 5] == 1)[0]  # 0:小杆塔，1:中杆塔，2:大杆塔
             all_preds_mid = all_preds_cpu[idx, :]
             all_preds_mid = all_preds_mid[all_preds_mid[:, 4] > 0.5]  # TODO 这里阈值需要设定
             if len(all_preds_mid) == 0:
                 all_preds_mid = np.empty((0, 6), dtype=all_preds_cpu.dtype)
 
-            idx = np.where(all_preds_cpu[:, 5] == 2)[0]   # 0:小杆塔，1:中杆塔，2:大杆塔
+            idx = np.where(all_preds_cpu[:, 5] == 2)[0]  # 0:小杆塔，1:中杆塔，2:大杆塔
             all_preds_0 = all_preds_cpu[idx, :]
-            idx = np.where(all_preds_cpu[:, 5] == 3)[0]   # 3:绝缘子
+            idx = np.where(all_preds_cpu[:, 5] == 3)[0]  # 3:绝缘子
             all_preds_1 = all_preds_cpu[idx, :]
             all_preds_1 = all_preds_1[all_preds_1[:, 4] > 0.5]  # TODO 这里阈值需要设定
             if len(all_preds_0) > 0:
@@ -760,14 +741,14 @@ def main():
         if len(all_preds) > 0:
             inds = torch.where(all_preds[:, 5] > 1)
             all_preds = all_preds[inds]
-            all_preds[all_preds[:, 5]==2, 5] = 0
-            all_preds[all_preds[:, 5]==3, 5] = 1
+            all_preds[all_preds[:, 5] == 2, 5] = 0
+            all_preds[all_preds[:, 5] == 3, 5] = 1
         if len(gt_boxes) > 0:
-            inds = torch.where(gt_labels > 2) # 1,2,3,4
+            inds = torch.where(gt_labels > 2)  # 1,2,3,4
             gt_boxes = gt_boxes[inds]
             gt_labels = gt_labels[inds]
-            gt_labels[gt_labels==3] = 1
-            gt_labels[gt_labels==4] = 2
+            gt_labels[gt_labels == 3] = 1
+            gt_labels[gt_labels == 4] = 2
 
         nl = len(gt_labels)
         if nl:
@@ -825,7 +806,7 @@ def main():
         # Assign all predictions as incorrect
         seen += 1
 
-        if nl: # if have gt_boxes
+        if nl:  # if have gt_boxes
             correct = torch.zeros(all_preds.shape[0], niou, dtype=torch.bool, device=device)
             gt_labels = gt_labels - 1
             tcls = gt_labels.tolist() if nl else []  # target class
@@ -920,7 +901,7 @@ def main():
         # Print results
         print(s)
         lines = []
-        lines.append(s+'\n')
+        lines.append(s + '\n')
         pf = '%20s' + '%12.3g' * 6  # print format
         print(pf % ('all', seen, nt.sum(), mp, mr, map50, map))
         lines.append(pf % ('all', seen, nt.sum(), mp, mr, map50, map) + '\n')
@@ -935,7 +916,7 @@ def main():
         if len(lines):
             all_stats_filename = str(save_dir) + '/all_stats.txt'
             for line in lines:
-                print(line.replace('\n',''))
+                print(line.replace('\n', ''))
             with open(all_stats_filename, 'w') as fp:
                 fp.writelines(lines)
         # import pdb
