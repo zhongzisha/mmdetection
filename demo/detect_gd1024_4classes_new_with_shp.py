@@ -208,7 +208,7 @@ def main():
     s = ('%20s' + '%12s' * 6) % ('Class', 'Images', 'Targets', 'P', 'R', 'mAP@.5', 'mAP@.5:.95')
     p, r, f1, mp, mr, map50, map, t0, t1 = 0., 0., 0., 0., 0., 0., 0., 0., 0.
     jdict, stats, ap, ap_class, wandb_images = [], [], [], [], []
-    iouv = torch.linspace(0.1, 0.95, 20).to(device)  # iou vector for mAP@0.5:0.95
+    iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
     is_plot = True
 
@@ -602,7 +602,7 @@ def main():
                 yc = (ymin + ymax) / 2
                 ws = xmax - xmin
                 hs = ymax - ymin
-                estimator = DBSCAN(eps=max(ws.mean(), hs.mean()) * 1.5, min_samples=1)
+                estimator = DBSCAN(eps=max(ws.mean(), hs.mean()) * 1.1, min_samples=1)
                 X = np.concatenate([xc, yc], axis=1)  # N x 2
 
                 estimator.fit(X)

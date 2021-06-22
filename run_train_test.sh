@@ -20,9 +20,13 @@ echo $LOG_JSON_FILE
 echo $LOG_FILE
 
 python ./tools/analysis_tools/analyze_logs.py plot_curve \
-  --keys 0_bbox_mAP \
+  --keys bbox_mAP \
   --out ${WORKDIR}/log_curve.png \
    ${LOG_JSON_FILE} || exit
+#python ./tools/analysis_tools/analyze_logs.py plot_curve \
+#  --keys 2_bbox_mAP \
+#  --out ${WORKDIR}/log_curve.png \
+#   ${LOG_JSON_FILE} || exit
 
 LOG_CURVE_FILE=`ls -alt ${WORKDIR}/log_curve*.png | head -n 1 | grep -oE '[^ ]+$'`
 echo $LOG_CURVE_FILE
@@ -40,6 +44,7 @@ echo $WORKDIR/epoch_${epoch_num}.pth
 ## the following is optional
 #python tools/test.py $WORKDIR/$CONFIG.py $CKPT_FILE --eval bbox \
 #  --show-dir ${WORKDIR}/epoch_${epoch_num}_val || exit
+#exit
 
 # faster_rcnn_r50_fpn_dc5_1x_coco_lr0.001_newAug2
 ssh ${WIN10_IP} powershell -c mkdir ${WIN10_WORK_ROOT}/${CONFIG};
