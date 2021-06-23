@@ -22,5 +22,6 @@ echo $time2
 
 sleep 60
 
-./tools/dist_train.sh configs/faster_rcnn_gd_1024_4classes/retinanet_r50_fpn_2x_coco.py 2 \
---work-dir /media/ubuntu/Temp/mmdetection/retinanet_r50_fpn_2x_coco_lr0.001
+CONFIG=faster_rcnn_r50_fpn_gd1024_rotate
+./tools/dist_train.sh configs/faster_rcnn/${CONFIG}.py 2 \
+--work-dir /media/ubuntu/Temp/mmdetection/${CONFIG}

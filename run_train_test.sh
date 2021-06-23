@@ -19,24 +19,25 @@ LOG_FILE="${LOG_JSON_FILE%.*}"
 echo $LOG_JSON_FILE
 echo $LOG_FILE
 
-python ./tools/analysis_tools/analyze_logs.py plot_curve \
-  --keys bbox_mAP \
-  --out ${WORKDIR}/log_curve.png \
-   ${LOG_JSON_FILE} || exit
 #python ./tools/analysis_tools/analyze_logs.py plot_curve \
-#  --keys 2_bbox_mAP \
+#  --keys bbox_mAP \
 #  --out ${WORKDIR}/log_curve.png \
 #   ${LOG_JSON_FILE} || exit
-
-LOG_CURVE_FILE=`ls -alt ${WORKDIR}/log_curve*.png | head -n 1 | grep -oE '[^ ]+$'`
-echo $LOG_CURVE_FILE
-filename=$(basename -- "$LOG_CURVE_FILE")
-extension="${filename##*.}"
-filename="${filename%.*}"
-epoch_num=${filename##*_}
-echo $filename
-echo $extension
-echo $epoch_num
+##python ./tools/analysis_tools/analyze_logs.py plot_curve \
+##  --keys 2_bbox_mAP \
+##  --out ${WORKDIR}/log_curve.png \
+##   ${LOG_JSON_FILE} || exit
+#
+#LOG_CURVE_FILE=`ls -alt ${WORKDIR}/log_curve*.png | head -n 1 | grep -oE '[^ ]+$'`
+#echo $LOG_CURVE_FILE
+#filename=$(basename -- "$LOG_CURVE_FILE")
+#extension="${filename##*.}"
+#filename="${filename%.*}"
+#epoch_num=${filename##*_}
+#echo $filename
+#echo $extension
+#echo $epoch_num
+epoch_num=24
 CKPT_FILE=$WORKDIR/epoch_${epoch_num}.pth
 CKPT_FILE_LATEST=$WORKDIR/latest.pth
 echo $WORKDIR/epoch_${epoch_num}.pth
