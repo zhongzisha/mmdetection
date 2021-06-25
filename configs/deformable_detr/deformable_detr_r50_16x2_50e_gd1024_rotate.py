@@ -160,6 +160,7 @@ data = dict(
 optimizer = dict(
     type='AdamW',
     lr=2e-4,
+    betas=(0.9, 0.999),
     weight_decay=0.0001,
     paramwise_cfg=dict(
         custom_keys={

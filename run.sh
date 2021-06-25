@@ -1,5 +1,5 @@
 time1=`date`              # 获取当前时间
-time2=$(date -d "-180 minute ago" +"%Y-%m-%d %H:%M:%S")  # 获取两个小时后的时间
+time2=$(date -d "-90 minute ago" +"%Y-%m-%d %H:%M:%S")  # 获取两个小时后的时间
 
 t1=`date -d "$time1" +%s`     # 时间转换成timestamp
 t2=`date -d "$time2" +%s`
@@ -22,6 +22,17 @@ echo $time2
 
 sleep 60
 
-CONFIG=faster_rcnn_r50_fpn_gd1024_rotate
-./tools/dist_train.sh configs/faster_rcnn/${CONFIG}.py 2 \
+#CONFIG=faster_rcnn_r50_fpn_gd1024_rotate
+#./tools/dist_train.sh configs/faster_rcnn/${CONFIG}.py 2 \
+#--work-dir /media/ubuntu/Temp/mmdetection/${CONFIG}
+
+
+CONFIG=ld_r50_gflv1_r101_fpn_gd1024_rotate_1x
+./tools/dist_train.sh configs/ld/${CONFIG}.py 2 \
 --work-dir /media/ubuntu/Temp/mmdetection/${CONFIG}
+
+
+
+
+
+

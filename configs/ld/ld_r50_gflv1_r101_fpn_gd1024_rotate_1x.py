@@ -17,3 +17,4 @@ model = dict(
         start_level=1,
         add_extra_convs='on_output',
         num_outs=5))
+optimizer = dict(lr=0.0025)
