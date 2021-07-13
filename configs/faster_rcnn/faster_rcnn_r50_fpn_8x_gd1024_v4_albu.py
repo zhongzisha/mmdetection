@@ -1,3 +1,11 @@
+_base_ = [
+    '../_base_/models/faster_rcnn_r50_fpn_gd1024_rotate.py',
+    # '../_base_/datasets/gd1024_detection_4classes_box_aug_v4_albu.py',
+    '../_base_/schedules/schedule_1x.py',
+    '../_base_/default_runtime.py'
+]
+optimizer = dict(lr=0.01)
+
 dataset_type = 'Gd1024Dataset'
 classes = ('1', '2', '3', '4')
 data_root = 'data/gd_newAug5_Rot1_4classes/'
@@ -6,42 +14,43 @@ img_norm_cfg = dict(
 albu_train_transforms = [
     dict(
         type='ShiftScaleRotate',
-        shift_limit=0.0625,
+        shift_limit=0.1,
         scale_limit=0.1,
-        rotate_limit=60,
+        rotate_limit=0,
         interpolation=1,
         p=0.5),
-    dict(
-        type='RandomBrightnessContrast',
-        brightness_limit=[0.1, 0.3],
-        contrast_limit=[0.1, 0.3],
-        p=0.2),
-    dict(
-        type='OneOf',
-        transforms=[
-            dict(
-                type='RGBShift',
-                r_shift_limit=10,
-                g_shift_limit=10,
-                b_shift_limit=10,
-                p=1.0),
-            dict(
-                type='HueSaturationValue',
-                hue_shift_limit=20,
-                sat_shift_limit=30,
-                val_shift_limit=20,
-                p=1.0)
-        ],
-        p=0.1),
-    dict(type='JpegCompression', quality_lower=85, quality_upper=95, p=0.2),
-    dict(type='ChannelShuffle', p=0.1),
-    dict(
-        type='OneOf',
-        transforms=[
-            dict(type='Blur', blur_limit=3, p=1.0),
-            dict(type='MedianBlur', blur_limit=3, p=1.0)
-        ],
-        p=0.1),
+    # dict(
+    #     type='RandomBrightnessContrast',
+    #     brightness_limit=[0.1, 0.3],
+    #     contrast_limit=[0.1, 0.3],
+    #     p=0.2),
+    # dict(
+    #     type='OneOf',
+    #     transforms=[
+    #         dict(
+    #             type='RGBShift',
+    #             r_shift_limit=10,
+    #             g_shift_limit=10,
+    #             b_shift_limit=10,
+    #             p=1.0),
+    #         dict(
+    #             type='HueSaturationValue',
+    #             hue_shift_limit=10,
+    #             sat_shift_limit=10,
+    #             val_shift_limit=10,
+    #             p=1.0)
+    #     ],
+    #     p=0.1),
+    # dict(type='JpegCompression', quality_lower=85, quality_upper=95, p=0.2),
+    # dict(type='ChannelShuffle', p=0.1),
+    # dict(type='MedianBlur', blur_limit=3, p=0.5),
+    # dict(
+    #     type='OneOf',
+    #     transforms=[
+    #         dict(type='Blur', blur_limit=3, p=0.5),
+    #         dict(type='MedianBlur', blur_limit=3, p=0.5)
+    #     ],
+    #     p=0.1),
 ]
 train_pipeline = [
     dict(type='LoadImageFromFile'),
