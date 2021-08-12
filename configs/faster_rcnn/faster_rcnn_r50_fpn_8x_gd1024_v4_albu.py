@@ -1,7 +1,7 @@
 _base_ = [
     # '../_base_/models/faster_rcnn_r50_fpn_gd1024_rotate.py',
     # '../_base_/datasets/gd1024_detection_4classes_box_aug_v4_albu.py',
-    '../_base_/schedules/schedule_1x.py',
+    '../_base_/schedules/schedule_2x.py',
     '../_base_/default_runtime.py'
 ]
 # model settings
@@ -13,8 +13,8 @@ model = dict(
         depth=50,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
-        # dilations=(1, 2, 2, 2),
-        # strides=(1, 2, 2, 1),
+        dilations=(1, 2, 2, 2),
+        strides=(1, 2, 2, 1),
         frozen_stages=1,
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
@@ -73,7 +73,7 @@ model = dict(
                 ignore_iof_thr=-1),
             sampler=dict(
                 type='RandomSampler',
-                num=256,
+                num=128,
                 pos_fraction=0.5,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=False),
@@ -95,8 +95,8 @@ model = dict(
                 ignore_iof_thr=-1),
             sampler=dict(
                 type='RandomSampler',  # OHEMSampler, RandomSampler
-                num=8,   # 512
-                pos_fraction=0.25,
+                num=128,   # 512
+                pos_fraction=0.5,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
             pos_weight=-1,
@@ -105,11 +105,11 @@ model = dict(
         rpn=dict(
             nms_pre=1000,
             max_per_img=1000,
-            nms=dict(type='nms', iou_threshold=0.7),
+            nms=dict(type='nms', iou_threshold=0.5),
             min_bbox_size=0),
         rcnn=dict(
-            score_thr=0.05,
-            nms=dict(type='nms', iou_threshold=0.5),
+            score_thr=0.01,
+            nms=dict(type='nms', iou_threshold=0.3),
             max_per_img=100)
         # soft-nms is also supported for rcnn testing
         # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
@@ -127,7 +127,7 @@ albu_train_transforms = [
         type='ShiftScaleRotate',
         shift_limit=0.3,
         scale_limit=0.5,
-        rotate_limit=10,
+        rotate_limit=30,
         interpolation=1,
         p=0.5),
     # dict(
@@ -154,7 +154,7 @@ albu_train_transforms = [
     #     p=0.1),
     # dict(type='JpegCompression', quality_lower=85, quality_upper=95, p=0.2),
     # dict(type='ChannelShuffle', p=0.1),
-    # dict(type='MedianBlur', blur_limit=3, p=0.5),
+    dict(type='MedianBlur', blur_limit=3, p=0.5),
     # dict(
     #     type='OneOf',
     #     transforms=[
@@ -210,19 +210,19 @@ data = dict(
     train=dict(
         classes=classes,
         type=dataset_type,
-        ann_file=data_root + 'box_aug_v4/train1/train1.json',
-        img_prefix=data_root + 'box_aug_v4/train1/images/',
+        ann_file=data_root + 'box_aug_v4/train2/train2.json',
+        img_prefix=data_root + 'box_aug_v4/train2/images/',
         pipeline=train_pipeline),
     val=dict(
         classes=classes,
         type=dataset_type,
-        ann_file=data_root + 'box_aug_v4/val1/val1.json',
-        img_prefix=data_root + 'box_aug_v4/val1/images/',
+        ann_file=data_root + 'box_aug_v4/val2/val2.json',
+        img_prefix=data_root + 'box_aug_v4/val2/images/',
         pipeline=test_pipeline),
     test=dict(
         classes=classes,
         type=dataset_type,
-        ann_file=data_root + 'box_aug_v4/val1/val1.json',
-        img_prefix=data_root + 'box_aug_v4/val1/images/',
+        ann_file=data_root + 'box_aug_v4/val2/val2.json',
+        img_prefix=data_root + 'box_aug_v4/val2/images/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
