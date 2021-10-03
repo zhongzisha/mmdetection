@@ -208,7 +208,6 @@ class InsulatorDataset(CustomDataset):
             result = results[idx]
             for label in range(len(result)):
                 bboxes = result[label]
-                print(label)
                 for i in range(bboxes.shape[0]):
                     data = dict()
                     data['image_id'] = img_id
