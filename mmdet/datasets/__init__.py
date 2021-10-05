@@ -16,6 +16,7 @@ from .wider_face import WIDERFaceDataset
 from .xml_style import XMLDataset
 from .gd1024 import Gd1024Dataset
 from .insulator import InsulatorDataset
+from .tower import  TowerDataset
 
 __all__ = [
     'CustomDataset', 'XMLDataset', 'CocoDataset', 'DeepFashionDataset',
@@ -25,5 +26,5 @@ __all__ = [
     'ClassBalancedDataset', 'WIDERFaceDataset', 'DATASETS', 'PIPELINES',
     'build_dataset', 'replace_ImageToTensor', 'get_loading_pipeline',
     'NumClassCheckHook', 'CocoPanopticDataset', 'MultiImageMixDataset',
-    'Gd1024Dataset', 'InsulatorDataset'
+    'Gd1024Dataset', 'InsulatorDataset', 'TowerDataset'
 ]
