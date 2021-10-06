@@ -72,6 +72,7 @@ class CustomDataset(Dataset):
         self.test_mode = test_mode
         self.filter_empty_gt = filter_empty_gt
         self.CLASSES = self.get_classes(classes)
+        self.img_bytes = None
 
         # join paths if data_root is specified
         if self.data_root is not None:

@@ -4,14 +4,14 @@ model = dict(
     type='FasterRCNN',
     backbone=dict(
         type='ResNet',
-        depth=50,
+        depth=101,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
         style='pytorch',
-        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet101')),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -59,8 +59,8 @@ model = dict(
         rpn=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
-                pos_iou_thr=0.6,
-                neg_iou_thr=0.2,
+                pos_iou_thr=0.7,
+                neg_iou_thr=0.3,
                 min_pos_iou=0.3,
                 match_low_quality=True,
                 ignore_iof_thr=-1),
