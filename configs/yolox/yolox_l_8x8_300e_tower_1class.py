@@ -1,6 +1,3 @@
-_base_ = ['../_base_/schedules/schedule_1x_2gpus.py',
-          '../_base_/default_runtime.py']
-
 # model settings
 model = dict(
     type='YOLOX',
@@ -57,8 +54,8 @@ train_dataset = dict(
     dataset=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + 'train.json',
-        img_prefix=data_root + 'images/',
+        ann_file=data_root + '/train/train.json',
+        img_prefix=data_root + '/train/images/',
         pipeline=[
             dict(type='LoadImageFromFile', to_float32=True),
             dict(type='LoadAnnotations', with_bbox=True)
@@ -85,20 +82,20 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=8,
+    samples_per_gpu=4,
     workers_per_gpu=2,
     train=train_dataset,
     val=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + 'val.json',
-        img_prefix=data_root + 'images/',
+        ann_file=data_root + '/val/val.json',
+        img_prefix=data_root + '/val/images/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + 'val.json',
-        img_prefix=data_root + 'images/',
+        ann_file=data_root + '/val/val.json',
+        img_prefix=data_root + '/val/images/',
         pipeline=test_pipeline))
 
 # optimizer
@@ -144,4 +141,17 @@ custom_hooks = [
 ]
 checkpoint_config = dict(interval=interval)
 evaluation = dict(interval=interval, metric='bbox')
-log_config = dict(interval=50)
+
+# yapf:disable
+log_config = dict(
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        # dict(type='TensorboardLoggerHook')
+    ])
+
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]

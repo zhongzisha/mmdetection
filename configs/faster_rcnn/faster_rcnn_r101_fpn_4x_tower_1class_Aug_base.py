@@ -123,7 +123,7 @@ albu_train_transforms = [
         type='ShiftScaleRotate',
         shift_limit=0.0625,
         scale_limit=0.0,
-        rotate_limit=30,
+        rotate_limit=180,
         interpolation=1,
         p=0.5),
     # dict(
@@ -207,20 +207,20 @@ data = dict(
     train=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/train/train.json',
-        img_prefix=data_root + '/train/images/',
+        ann_file=data_root + '/train.json',
+        img_prefix=data_root + '/images/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/val/val.json',
-        img_prefix=data_root + '/val/images/',
+        ann_file=data_root + '/val.json',
+        img_prefix=data_root + '/images/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/val/val.json',
-        img_prefix=data_root + '/val/images/',
+        ann_file=data_root + '/val.json',
+        img_prefix=data_root + '/images/',
         pipeline=test_pipeline))
 evaluation = dict(interval=2, metric='bbox')
 

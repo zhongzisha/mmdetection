@@ -20,7 +20,7 @@ from .custom import CustomDataset
 @DATASETS.register_module()
 class InsulatorDataset(CustomDataset):
 
-    CLASSES = ("class0", "class1", "class2")
+    CLASSES = None
 
     def load_annotations(self, ann_file):
         """Load annotation from COCO style annotation file.
@@ -36,7 +36,10 @@ class InsulatorDataset(CustomDataset):
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
         # self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
-        self.cat_ids = self.coco.get_cat_ids()
+        if self.CLASSES is None:
+            self.cat_ids = self.coco.get_cat_ids()
+        else:
+            self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
 
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.img_ids = self.coco.get_img_ids()

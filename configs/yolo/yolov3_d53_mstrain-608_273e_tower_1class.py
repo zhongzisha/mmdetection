@@ -61,7 +61,7 @@ data_root = 'data/towers/'
 classes = ('tower',)
 img_norm_cfg = dict(mean=[0, 0, 0], std=[255., 255., 255.], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadImageFromMemory', to_float32=True),
+    dict(type='LoadImageFromFile', to_float32=True),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='PhotoMetricDistortion'),
     dict(
@@ -81,7 +81,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromMemory'),
+    dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(608, 608),
@@ -101,20 +101,20 @@ data = dict(
     train=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + 'train.json',
-        img_prefix=data_root + 'images/',
+        ann_file=data_root + '/train/train.json',
+        img_prefix=data_root + '/train/images/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + 'val.json',
-        img_prefix=data_root + 'images/',
+        ann_file=data_root + '/val/val.json',
+        img_prefix=data_root + '/val/images/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + 'val.json',
-        img_prefix=data_root + 'images/',
+        ann_file=data_root + '/val/val.json',
+        img_prefix=data_root + '/val/images/',
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0005)
