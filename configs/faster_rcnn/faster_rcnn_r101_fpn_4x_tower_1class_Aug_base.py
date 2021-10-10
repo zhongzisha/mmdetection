@@ -111,19 +111,16 @@ model = dict(
 
 # dataset settings
 dataset_type = 'TowerDataset'
-data_root = 'data/towers/'
+data_root = 'data/towers'
 classes = ('tower',)
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 albu_train_transforms = [
     dict(
-        type='RandomRotate90',
-        p=0.5),
-    dict(
         type='ShiftScaleRotate',
         shift_limit=0.0625,
         scale_limit=0.0,
-        rotate_limit=180,
+        rotate_limit=30,
         interpolation=1,
         p=0.5),
     # dict(
@@ -207,20 +204,20 @@ data = dict(
     train=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/train.json',
-        img_prefix=data_root + '/images/',
+        ann_file=data_root + '/train/train.json',
+        img_prefix=data_root + '/train/images/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/val.json',
-        img_prefix=data_root + '/images/',
+        ann_file=data_root + '/val/val.json',
+        img_prefix=data_root + '/val/images/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/val.json',
-        img_prefix=data_root + '/images/',
+        ann_file=data_root + '/val/val.json',
+        img_prefix=data_root + '/val/images/',
         pipeline=test_pipeline))
 evaluation = dict(interval=2, metric='bbox')
 
@@ -245,7 +242,7 @@ workflow = [('train', 1)]
 # optimizer
 # 0.01 for 8 gpus
 # 0.0025 for 2 gpus
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -253,6 +250,6 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[32, 44])
-runner = dict(type='EpochBasedRunner', max_epochs=48)
+    step=[8, 11])
+runner = dict(type='EpochBasedRunner', max_epochs=12)
 

@@ -56,14 +56,14 @@ train_data2 = dict(
 val_data2 = dict(
         type=dataset_type,
         classes=('good', 'bad', 'defect'),
-        ann_file=data_root + 'data/insulator_generated/val/val.json',
-        img_prefix=data_root + 'data/insulator_generated/val/images/',
+        ann_file='data/insulator_generated/val/val.json',
+        img_prefix='data/insulator_generated/val/images/',
         pipeline=test_pipeline)
 test_data2 = dict(
         type=dataset_type,
         classes=('good', 'bad', 'defect'),
-        ann_file=data_root + 'data/insulator_generated/val/val.json',
-        img_prefix=data_root + 'data/insulator_generated/val/images/',
+        ann_file='data/insulator_generated/val/val.json',
+        img_prefix='data/insulator_generated/val/images/',
         pipeline=test_pipeline)
 
 
@@ -72,14 +72,17 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type='ConcatDataset',
+        classes=('good', 'bad', 'defect'),
         datasets=[train_data1, train_data2]
     ),
     val=dict(
         type='ConcatDataset',
+        classes=('good', 'bad', 'defect'),
         datasets=[val_data1, val_data2]
     ),
     test=dict(
         type='ConcatDataset',
+        classes=('good', 'bad', 'defect'),
         datasets=[test_data1, test_data2]
     ))
 evaluation = dict(interval=1, metric='bbox')

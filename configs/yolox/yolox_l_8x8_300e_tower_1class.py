@@ -54,8 +54,8 @@ train_dataset = dict(
     dataset=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/train/train.json',
-        img_prefix=data_root + '/train/images/',
+        ann_file=data_root + '/train.json',
+        img_prefix=data_root + '/images/',
         pipeline=[
             dict(type='LoadImageFromFile', to_float32=True),
             dict(type='LoadAnnotations', with_bbox=True)
@@ -82,20 +82,20 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=4,
-    workers_per_gpu=2,
+    samples_per_gpu=8,
+    workers_per_gpu=4,
     train=train_dataset,
     val=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/val/val.json',
-        img_prefix=data_root + '/val/images/',
+        ann_file=data_root + '/val.json',
+        img_prefix=data_root + '/images/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/val/val.json',
-        img_prefix=data_root + '/val/images/',
+        ann_file=data_root + '/val.json',
+        img_prefix=data_root + '/images/',
         pipeline=test_pipeline))
 
 # optimizer
