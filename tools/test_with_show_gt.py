@@ -27,21 +27,25 @@ from mmdet.datasets import (build_dataloader, build_dataset,
 from mmdet.models import build_detector
 
 from pycocotools.coco import COCO
+from pycocotools import mask as cocomask
 
 
 def single_gpu_test(model,
                     data_loader,
                     show=False,
                     out_dir=None,
-                    show_score_thr=0.3):
+                    show_score_thr=0.3,
+                    json_filename=None,
+                    img_postfix='.jpg'):
     model.eval()
     results = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
     idx = 0
-    coco = COCO('data/towers/val/val.json')
-    img_maps = {v['file_name'].replace('.jpg', ''): k for k, v in coco.imgs.items()}
-    for i, data in enumerate(data_loader):
+    coco = COCO(json_filename)
+    img_maps = {v['file_name'].replace(img_postfix, ''): k for k, v in coco.imgs.items()}
+    all_mask_results = ['id,predicted\n']
+    for _, data in enumerate(data_loader):
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
 
@@ -69,7 +73,7 @@ def single_gpu_test(model,
 
                 # import pdb
                 # pdb.set_trace()
-                img_prefix = img_meta['ori_filename'].replace('.jpg', '')
+                img_prefix = img_meta['ori_filename'].replace(img_postfix, '')
                 img_id = img_maps[img_prefix]
                 ann_ids = coco.get_ann_ids(img_ids=[img_id])
                 anns = coco.load_anns(ann_ids)
@@ -102,6 +106,55 @@ def single_gpu_test(model,
                     out_file=out_file,
                     score_thr=show_score_thr)
 
+                if isinstance(result[i], tuple):
+                    bbox_result, segm_result = result[i]
+                    if isinstance(segm_result, tuple):
+                        segm_result = segm_result[0]  # ms rcnn
+                else:
+                    bbox_result, segm_result = result[i], None
+                bboxes = np.vstack(bbox_result)
+                labels = [
+                    np.full(bbox.shape[0], j, dtype=np.int32)
+                    for j, bbox in enumerate(bbox_result)
+                ]
+                labels = np.concatenate(labels)
+                # draw segmentation masks
+                segms = None
+                if segm_result is not None and len(labels) > 0:  # non empty
+                    segms = mmcv.concat_list(segm_result)
+                    if isinstance(segms[0], torch.Tensor):
+                        segms = torch.stack(segms, dim=0).detach().cpu().numpy()
+                    else:
+                        segms = np.stack(segms, axis=0)
+
+                if show_score_thr > 0:
+                    assert bboxes.shape[1] == 5
+                    scores = bboxes[:, -1]
+                    inds = scores > show_score_thr
+                    bboxes = bboxes[inds, :]
+                    labels = labels[inds]
+                    if segms is not None:
+                        segms = segms[inds, ...]
+
+                for j, (bbox, label) in enumerate(zip(bboxes, labels)):
+                    bbox_int = bbox.astype(np.int32)
+                    poly = [[bbox_int[0], bbox_int[1]], [bbox_int[0], bbox_int[3]],
+                            [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]]]
+
+                    if segms is not None:
+                        mask = segms[j].astype(bool)
+                        mask1 = np.zeros((ori_h, ori_w), dtype=np.uint8)
+                        mask1[mask] = 1
+                        # RLE = cocomask.encode(np.asfortranarray(mask1))
+                        # all_mask_results.append((img_prefix, RLE))
+                        # import pdb
+                        # pdb.set_trace()
+                        pixels = mask1.flatten()
+                        pixels = np.concatenate([[0], pixels, [0]])
+                        runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
+                        runs[1::2] -= runs[::2]
+                        all_mask_results.append(img_prefix+','+' '.join(str(x) for x in runs) + '\n')
+
         # encode mask results
         if isinstance(result[0], tuple):
             result = [(bbox_results, encode_mask_results(mask_results))
@@ -110,6 +163,11 @@ def single_gpu_test(model,
 
         for _ in range(batch_size):
             prog_bar.update()
+
+    if out_dir is not None and len(all_mask_results) > 0:
+        with open(os.path.join(out_dir, 'submission.csv'), 'w') as fp:
+            fp.writelines(all_mask_results)
+
     return results
 
 
@@ -267,6 +325,10 @@ def parse_args():
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(
+        '--json_filename', default='data/towers/val/val.json', type=str)
+    parser.add_argument(
+        '--img_postfix', default='.jpg', type=str)
+    parser.add_argument(
         '--show-score-thr',
         type=float,
         default=0.3,
@@ -419,7 +481,9 @@ def main():
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
         outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
-                                  args.show_score_thr)
+                                  args.show_score_thr,
+                                  args.json_filename,
+                                  args.img_postfix)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
