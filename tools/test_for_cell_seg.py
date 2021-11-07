@@ -28,6 +28,162 @@ from mmdet.models import build_detector
 
 from pycocotools.coco import COCO
 from pycocotools import mask as cocomask
+import typing
+import zlib
+import base64
+import cupy as cp
+import gc
+
+
+# for Kaggle submission
+# import os
+# os.environ['CUDA_PATH'] = '/usr/local/cuda'
+# os.environ['CUDA_HOME'] = '/usr/local/cuda'
+# os.environ['MMCV_WITH_OPS'] = '1'
+# os.environ['TORCH_CUDA_ARCH_LIST'] = '6.0'
+#
+# !pip install ../input/packages/addict-2.4.0-py3-none-any.whl
+# !pip install ../input/packages/yapf-0.31.0-py2.py3-none-any.whl
+# !pip install ../input/packages/pycocotools-2.0.2/dist/pycocotools-2.0.2.tar
+# !pip install ../input/packages/mmcv_mmdet/mmcv-1.3.10
+# !pip install ../input/packagesv2/terminaltables-3.1.0
+# !pip install ../input/packages/mmcv_mmdet/mmdetection-2.17.0
+
+
+def encode_binary_mask(mask: np.ndarray) -> typing.Text:
+    """Converts a binary mask into OID challenge encoding ascii text."""
+    # check input mask --
+    if mask.dtype != np.bool:
+        raise ValueError(
+            "encode_binary_mask expects a binary mask, received dtype == %s" %
+            mask.dtype)
+
+    mask = np.squeeze(mask)
+    if len(mask.shape) != 2:
+        raise ValueError(
+            "encode_binary_mask expects a 2d mask, received shape == %s" %
+            mask.shape)
+
+    # convert input mask to expected COCO API input --
+    mask_to_encode = mask.reshape(mask.shape[0], mask.shape[1], 1)
+    mask_to_encode = mask_to_encode.astype(np.uint8)
+    mask_to_encode = np.asfortranarray(mask_to_encode)
+
+    # RLE encode mask --
+    encoded_mask = cocomask.encode(mask_to_encode)[0]["counts"]
+
+    # compress and base64 encoding --
+    binary_str = zlib.compress(encoded_mask, zlib.Z_BEST_COMPRESSION)
+    base64_str = base64.b64encode(binary_str)
+    return base64_str.decode()
+
+
+def mask2rle(msk):
+    '''
+    img: numpy array, 1 - mask, 0 - background
+    Returns run length as string formated
+    '''
+    msk = cp.array(msk)
+    pixels = msk.flatten()
+    pad = cp.array([0])
+    pixels = cp.concatenate([pad, pixels, pad])
+    runs = cp.where(pixels[1:] != pixels[:-1])[0] + 1
+    runs[1::2] -= runs[::2]
+    if len(runs) >= 6:
+        return ' '.join(str(x) for x in runs)
+    else:
+        return None
+
+
+def rle2mask(rle, shape=None):
+    '''
+    mask_rle: run-length as string formated (start length)
+    shape: (height,width) of array to return
+    Returns numpy array, 1 - mask, 0 - background
+
+    '''
+    if shape is None:
+        shape = [520, 704]
+    s = rle.split()
+    starts, lengths = [np.asarray(x, dtype=int) for x in (s[0:][::2], s[1:][::2])]
+    starts -= 1
+    ends = starts + lengths
+    img = np.zeros(shape[0] * shape[1], dtype=np.uint8)
+    for lo, hi in zip(starts, ends):
+        img[lo:hi] = 1
+    return img.reshape(shape)  # Needed to align to RLE direction
+
+
+def one_hot(y, num_classes, dtype=cp.uint8):  # GPU
+    y = cp.array(y, dtype='int')
+    input_shape = y.shape
+    if input_shape and input_shape[-1] == 1 and len(input_shape) > 1:
+        input_shape = tuple(input_shape[:-1])
+    y = y.ravel()
+    if not num_classes:
+        num_classes = cp.max(y) + 1
+    n = y.shape[0]
+    categorical = cp.zeros((n, num_classes), dtype=dtype)
+    categorical[cp.arange(n), y] = 1
+    output_shape = input_shape + (num_classes,)
+    categorical = cp.reshape(categorical, output_shape)
+    return categorical
+
+
+def fix_overlap(msk):  # GPU
+    """
+    Args:
+        mask: multi-channel mask, each channel is an instance of cell, shape:(520,704,None)
+    Returns:
+        multi-channel mask with non-overlapping values, shape:(520,704,None)
+    """
+    msk = cp.array(msk)
+    msk = cp.pad(msk, [[0, 0], [0, 0], [1, 0]])  # add dummy mask for background
+    ins_len = msk.shape[-1]
+    msk = cp.argmax(msk, axis=-1)  # convert multi channel mask to single channel mask, argmax will remove overlap
+    msk = one_hot(msk, num_classes=ins_len)  # back to multi-channel mask, some instance might get removed
+    msk = msk[..., 1:]  # remove background mask
+    msk = msk[..., cp.any(msk, axis=(0, 1))]  # remove all-zero masks
+    # assert np.prod(msk, axis=-1).sum()==0 # overlap check, will raise error if there is overlap
+    return msk
+
+
+def check_overlap(msk):
+    msk = msk.astype(cp.bool).astype(cp.uint8)  # binary mask
+    return cp.any(cp.sum(msk, axis=-1) > 1)  # only one channgel will contain value
+
+
+# From https://www.kaggle.com/stainsby/fast-tested-rle
+def rle_decode(mask_rle, shape=(520, 704)):
+    '''
+    mask_rle: run-length as string formated (start length)
+    shape: (height,width) of array to return
+    Returns numpy array, 1 - mask, 0 - background
+
+    '''
+    s = mask_rle.split()
+    starts, lengths = [np.asarray(x, dtype=int) for x in (s[0:][::2], s[1:][::2])]
+    starts -= 1
+    ends = starts + lengths
+    img = np.zeros(shape[0]*shape[1], dtype=np.uint8)
+    for lo, hi in zip(starts, ends):
+        img[lo:hi] = 1
+    return img.reshape(shape)  # Needed to align to RLE direction
+
+
+def rle_encode(img):
+    '''
+    img: numpy array, 1 - mask, 0 - background
+    Returns run length as string formated
+    '''
+    pixels = img.flatten()
+    pixels = np.concatenate([[0], pixels, [0]])
+    runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
+    runs[1::2] -= runs[::2]
+    if len(runs) >= 6:
+        return ' '.join(str(x) for x in runs)
+    else:
+        return None
 
 
 def single_gpu_test(model,
@@ -42,10 +198,14 @@ def single_gpu_test(model,
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
     idx = 0
-    coco = COCO(json_filename)
-    img_maps = {v['file_name'].replace(img_postfix, ''): k for k, v in coco.imgs.items()}
-    ids = []
-    all_masks = []
+    if os.path.exists(json_filename):
+        coco = COCO(json_filename)
+        img_maps = {v['file_name'].replace(img_postfix, ''): k for k, v in coco.imgs.items()}
+    else:
+        coco = None
+        img_maps = None
+    all_results = []
+    alldata = []
     for _, data in enumerate(data_loader):
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
@@ -82,7 +242,7 @@ def single_gpu_test(model,
                 gt_labels = []
                 for ann in anns:
                     x1, y1, bw, bh = ann['bbox']
-                    gt_bboxes.append([x1, y1, x1+bw, y1+bh])
+                    gt_bboxes.append([x1, y1, x1 + bw, y1 + bh])
                     gt_labels.append(ann['category_id'])
                 gt_bboxes = np.array(gt_bboxes)
                 gt_labels = np.array(gt_labels)
@@ -94,7 +254,7 @@ def single_gpu_test(model,
                     cv2.rectangle(img_show, (gt_box[0], gt_box[1]), (gt_box[2], gt_box[3]),
                                   color=(0, 255, 0))
                     cv2.putText(img_show,
-                                text='%s: %d'% (img_meta['ori_filename'], len(gt_bboxes)),
+                                text='%s: %d' % (img_meta['ori_filename'], len(gt_bboxes)),
                                 org=(50, 100),
                                 fontScale=2,
                                 fontFace=1,
@@ -109,66 +269,60 @@ def single_gpu_test(model,
                     out_file=out_file,
                     score_thr=show_score_thr)
 
-                if isinstance(result[i], tuple):
-                    bbox_result, segm_result = result[i]
-                    if isinstance(segm_result, tuple):
-                        segm_result = segm_result[0]  # ms rcnn
-                else:
-                    bbox_result, segm_result = result[i], None
-                bboxes = np.vstack(bbox_result)
-                labels = [
-                    np.full(bbox.shape[0], j, dtype=np.int32)
-                    for j, bbox in enumerate(bbox_result)
-                ]
-                labels = np.concatenate(labels)
-                # draw segmentation masks
-                segms = None
-                if segm_result is not None and len(labels) > 0:  # non empty
-                    segms = mmcv.concat_list(segm_result)
-                    if isinstance(segms[0], torch.Tensor):
-                        segms = torch.stack(segms, dim=0).detach().cpu().numpy()
-                    else:
-                        segms = np.stack(segms, axis=0)
+                encoded_masks = []
+                for class_id in range(1):
+                    bbs = result[i][0][class_id]
+                    sgs = result[i][1][class_id]
+                    # print(bbs, sgs, type(bbs), type(sgs))
+                    mask = []
+                    pred_masks = []
+                    for bb, sg in zip(bbs, sgs):
+                        box = bb[:4]
+                        cnf = bb[4]
+                        mask.append(cp.array(sg))
+                        pred_masks.append(sg)
+                        if out_dir:
+                            cv2.rectangle(img_show2,
+                                          (int(box[0]), int(box[1])),
+                                          (int(box[2]), int(box[3])),
+                                          color=(0, 255, 255))
+                            cv2.putText(img_show2,
+                                        text='%.2f' % cnf,
+                                        org=(int(box[0]), int(box[1])),
+                                        fontScale=1,
+                                        fontFace=1,
+                                        color=(255, 0, 0))
+                    mask = cp.stack(mask, axis=-1)
+                    if check_overlap(mask): # if mask instances have overlap then fix it
+                        mask = fix_overlap(mask)
+                    for idx in range(mask.shape[-1]):
+                        mask_ins = mask[..., idx]
+                        rle = mask2rle(mask_ins)
+                        if rle:
+                            all_results.append([img_prefix, rle])
 
-                if show_score_thr > 0:
-                    assert bboxes.shape[1] == 5
-                    scores = bboxes[:, -1]
-                    inds = scores > show_score_thr
-                    bboxes = bboxes[inds, :]
-                    labels = labels[inds]
-                    if segms is not None:
-                        segms = segms[inds, ...]
+                    used = np.zeros((ori_h, ori_w), dtype=int)
+                    for mask in pred_masks:
+                        mask = mask * (1 - used)
+                        used += mask
+                        rle = rle_encode(mask)
+                        if rle:
+                            alldata.append([img_prefix, rle])
+                            encoded_masks.append(rle)
 
-                mask_all = np.zeros((ori_h, ori_w), dtype=np.uint8)
-                for j, (bbox, label) in enumerate(zip(bboxes, labels)):
-                    bbox_int = bbox.astype(np.int32)
-                    poly = [[bbox_int[0], bbox_int[1]], [bbox_int[0], bbox_int[3]],
-                            [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]]]
+                    mask_all = None
+                    if out_dir:
+                        mask_all = cp.sum(mask, axis=-1) > 0
+                        mask_all = mask_all.get()
+                        cv2.imwrite(os.path.join(out_dir, img_prefix + '_predicted.png'),
+                                    np.concatenate([
+                                        img_show2,
+                                        np.stack([mask_all, mask_all, mask_all], axis=-1)*255
+                                    ], axis=1)
+                                    )
 
-                    if segms is not None:
-                        mask = segms[j].astype(bool)
-                        mask1 = np.zeros((ori_h, ori_w), dtype=np.uint8)
-                        mask1[mask] = 1
-                        mask_all += mask1
-                        # RLE = cocomask.encode(np.asfortranarray(mask1))
-                        # all_mask_results.append((img_prefix, RLE))
-                        # import pdb
-                        # pdb.set_trace()
-                        pixels = mask1.flatten()
-                        pixels = np.concatenate([[0], pixels, [0]])
-                        runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
-                        runs[1::2] -= runs[::2]
-                        if len(runs) >= 6:
-                            ids.append(img_prefix)
-                            all_masks.append(' '.join(str(x) for x in runs))
-
-                mask_all[mask_all > 0] = 1
-                cv2.imwrite(os.path.join(out_dir, img_prefix + '_predicted.png'),
-                            np.concatenate([
-                                img_show2,
-                                np.stack([mask_all, mask_all, mask_all], axis=-1)*255
-                            ], axis=1)
-                            )
+                    del mask, rle, sgs, bbs, mask_all, pred_masks
+                    gc.collect()
 
         # encode mask results
         if isinstance(result[0], tuple):
@@ -179,9 +333,29 @@ def single_gpu_test(model,
         for _ in range(batch_size):
             prog_bar.update()
 
-    if out_dir is not None and len(all_masks) > 0:
+    # print(all_results)
+    # import pdb
+    # pdb.set_trace()
+
+    if len(all_results) > 0:
         import pandas as pd
-        pd.DataFrame({'id': ids, 'predicted': all_masks}).to_csv(os.path.join(out_dir, 'submission.csv'), index=False)
+        pred_df = pd.DataFrame(all_results, columns=['id', 'predicted'])
+        sub_df = pd.read_csv('configs/cell_seg/sample_submission.csv')
+        del sub_df['predicted']
+        sub_df = sub_df.merge(pred_df, on='id', how='left')
+        sub_df.to_csv(os.path.join(out_dir, 'submission.csv'), index=False)
+        sub_df.head()
+
+        # pdb.set_trace()
+
+    if len(alldata) > 0:
+        import pandas as pd
+        pred_df = pd.DataFrame(alldata, columns=['id','predicted'])
+        sub_df  = pd.read_csv('configs/cell_seg/sample_submission.csv')
+        del sub_df['predicted']
+        sub_df = sub_df.merge(pred_df, on='id', how='left')
+        sub_df.to_csv('submission1.csv',index=False)
+        sub_df.head()
 
     return results
 
@@ -240,7 +414,7 @@ def collect_results_cpu(result_part, size, tmpdir=None):
     if tmpdir is None:
         MAX_LEN = 512
         # 32 is whitespace
-        dir_tensor = torch.full((MAX_LEN, ),
+        dir_tensor = torch.full((MAX_LEN,),
                                 32,
                                 dtype=torch.uint8,
                                 device='cuda')
@@ -323,19 +497,19 @@ def parse_args():
         '--fuse-conv-bn',
         action='store_true',
         help='Whether to fuse conv and bn, this will slightly increase'
-        'the inference speed')
+             'the inference speed')
     parser.add_argument(
         '--format-only',
         action='store_true',
         help='Format the output results without perform evaluation. It is'
-        'useful when you want to format the result to a specific format and '
-        'submit it to the test server')
+             'useful when you want to format the result to a specific format and '
+             'submit it to the test server')
     parser.add_argument(
         '--eval',
         type=str,
         nargs='+',
         help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
-        ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
+             ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
     parser.add_argument('--show', action='store_true', help='show results')
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
@@ -355,30 +529,30 @@ def parse_args():
     parser.add_argument(
         '--tmpdir',
         help='tmp directory used for collecting results from multiple '
-        'workers, available when gpu-collect is not specified')
+             'workers, available when gpu-collect is not specified')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
         action=DictAction,
         help='override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into config file. If the value to '
-        'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
-        'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
-        'Note that the quotation marks are necessary and that no white space '
-        'is allowed.')
+             'in xxx=yyy format will be merged into config file. If the value to '
+             'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
+             'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
+             'Note that the quotation marks are necessary and that no white space '
+             'is allowed.')
     parser.add_argument(
         '--options',
         nargs='+',
         action=DictAction,
         help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function (deprecate), '
-        'change to --eval-options instead.')
+             'format will be kwargs for dataset.evaluate() function (deprecate), '
+             'change to --eval-options instead.')
     parser.add_argument(
         '--eval-options',
         nargs='+',
         action=DictAction,
         help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function')
+             'format will be kwargs for dataset.evaluate() function')
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm', 'mpi'],
@@ -403,7 +577,7 @@ def main():
     args = parse_args()
 
     assert args.out or args.eval or args.format_only or args.show \
-        or args.show_dir, \
+           or args.show_dir, \
         ('Please specify at least one operation (save/eval/format/show the '
          'results / save the results) with the argument "--out", "--eval"'
          ', "--format-only", "--show" or "--show-dir"')
@@ -519,8 +693,8 @@ def main():
             eval_kwargs = cfg.get('evaluation', {}).copy()
             # hard-code way to remove EvalHook args
             for key in [
-                    'interval', 'tmpdir', 'start', 'gpu_collect', 'save_best',
-                    'rule'
+                'interval', 'tmpdir', 'start', 'gpu_collect', 'save_best',
+                'rule'
             ]:
                 eval_kwargs.pop(key, None)
             eval_kwargs.update(dict(metric=args.eval, **kwargs))

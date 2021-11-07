@@ -92,20 +92,7 @@ model = dict(
                     use_sigmoid=False,
                     loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
-        ],
-        mask_roi_extractor=dict(
-            type='SingleRoIExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
-            out_channels=256,
-            featmap_strides=[4, 8, 16, 32]),
-        mask_head=dict(
-            type='FCNMaskHead',
-            num_convs=4,
-            in_channels=256,
-            conv_out_channels=256,
-            num_classes=1,
-            loss_mask=dict(
-                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))),
+        ]),
     # model training and testing settings
     train_cfg=dict(
         rpn=dict(
@@ -145,7 +132,6 @@ model = dict(
                     pos_fraction=0.25,
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
-                mask_size=28,
                 pos_weight=-1,
                 debug=False),
             dict(
@@ -162,7 +148,6 @@ model = dict(
                     pos_fraction=0.25,
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
-                mask_size=28,
                 pos_weight=-1,
                 debug=False),
             dict(
@@ -179,7 +164,6 @@ model = dict(
                     pos_fraction=0.25,
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
-                mask_size=28,
                 pos_weight=-1,
                 debug=False)
         ]),
@@ -192,95 +176,4 @@ model = dict(
         rcnn=dict(
             score_thr=0.05,
             nms=dict(type='nms', iou_threshold=0.5),
-            max_per_img=100,
-            mask_thr_binary=0.5)))
-
-# dataset settings
-dataset_type = 'CocoDataset'
-data_root = 'data/cell_seg/'
-classes = ('cell', )
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-    # dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size_divisor=32),
-    dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
-]
-test_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(
-        type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size_divisor=32),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img']),
-        ])
-]
-data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
-    train=dict(
-        type=dataset_type,
-        classes=classes,
-        ann_file=data_root + '/coco_train.json',
-        img_prefix=data_root + '/train/',
-        pipeline=train_pipeline),
-    val=dict(
-        type=dataset_type,
-        classes=classes,
-        ann_file=data_root + '/coco_val.json',
-        img_prefix=data_root + '/train/',
-        pipeline=test_pipeline),
-    test=dict(
-        type=dataset_type,
-        classes=classes,
-        ann_file=data_root + '/coco_val.json',
-        img_prefix=data_root + '/train/',
-        pipeline=test_pipeline))
-evaluation = dict(metric=['bbox', 'segm'], interval=4)
-
-# optimizer
-optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=None)
-# learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=0.001,
-    step=[16, 19])
-runner = dict(type='EpochBasedRunner', max_epochs=20)
-
-checkpoint_config = dict(interval=4)
-# yapf:disable
-log_config = dict(
-    interval=50,
-    hooks=[
-        dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
-    ])
-# yapf:enable
-custom_hooks = [dict(type='NumClassCheckHook')]
-
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
-load_from = None
-resume_from = None
-workflow = [('train', 1)]
-
-
-# _base_ = [
-#     '../_base_/models/cascade_mask_rcnn_r50_fpn.py',
-#     '../_base_/datasets/coco_instance.py',
-#     '../_base_/schedules/schedule_20e.py', '../_base_/default_runtime.py'
-# ]
+            max_per_img=100)))
