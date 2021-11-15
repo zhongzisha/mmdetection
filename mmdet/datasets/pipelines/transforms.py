@@ -270,7 +270,7 @@ class Resize:
                     results['scale'],
                     interpolation='nearest',
                     backend=self.backend)
-            results['gt_semantic_seg'] = gt_seg
+            results[key] = gt_seg
 
     def __call__(self, results):
         """Call function to resize images, bounding boxes, masks, semantic
@@ -334,14 +334,14 @@ class RandomFlip:
         ``direction``ly flipped with probability of ``flip_ratio`` .
         E.g., ``flip_ratio=0.5``, ``direction='horizontal'``,
         then image will be horizontally flipped with probability of 0.5.
-    - ``flip_ratio`` is float, ``direction`` is list of string: the image wil
+    - ``flip_ratio`` is float, ``direction`` is list of string: the image will
         be ``direction[i]``ly flipped with probability of
         ``flip_ratio/len(direction)``.
         E.g., ``flip_ratio=0.5``, ``direction=['horizontal', 'vertical']``,
         then image will be horizontally flipped with probability of 0.25,
         vertically with probability of 0.25.
     - ``flip_ratio`` is list of float, ``direction`` is list of string:
-        given ``len(flip_ratio) == len(direction)``, the image wil
+        given ``len(flip_ratio) == len(direction)``, the image will
         be ``direction[i]``ly flipped with probability of ``flip_ratio[i]``.
         E.g., ``flip_ratio=[0.3, 0.5]``, ``direction=['horizontal',
         'vertical']``, then image will be horizontally flipped with probability
@@ -727,6 +727,8 @@ class RandomCrop:
             in range [crop_size[0], min(w, crop_size[1])]. Default "absolute".
         allow_negative_crop (bool, optional): Whether to allow a crop that does
             not contain any bbox area. Default False.
+        recompute_bbox (bool, optional): Whether to re-compute the boxes based
+            on cropped instance masks. Default False.
         bbox_clip_border (bool, optional): Whether clip the objects outside
             the border of the image. Defaults to True.
 
@@ -745,6 +747,7 @@ class RandomCrop:
                  crop_size,
                  crop_type='absolute',
                  allow_negative_crop=False,
+                 recompute_bbox=False,
                  bbox_clip_border=True):
         if crop_type not in [
                 'relative_range', 'relative', 'absolute', 'absolute_range'
@@ -760,6 +763,7 @@ class RandomCrop:
         self.crop_type = crop_type
         self.allow_negative_crop = allow_negative_crop
         self.bbox_clip_border = bbox_clip_border
+        self.recompute_bbox = recompute_bbox
         # The key correspondence from bboxes to labels and masks.
         self.bbox2label = {
             'gt_bboxes': 'gt_labels',
@@ -828,6 +832,8 @@ class RandomCrop:
                 results[mask_key] = results[mask_key][
                     valid_inds.nonzero()[0]].crop(
                         np.asarray([crop_x1, crop_y1, crop_x2, crop_y2]))
+                if self.recompute_bbox:
+                    results[key] = results[mask_key].get_bboxes()
 
         # crop semantic seg
         for key in results.get('seg_fields', []):
@@ -2016,8 +2022,8 @@ class Mosaic:
             list: indexes.
         """
 
-        indexs = [random.randint(0, len(dataset)) for _ in range(3)]
-        return indexs
+        indexes = [random.randint(0, len(dataset)) for _ in range(3)]
+        return indexes
 
     def _mosaic_transform(self, results):
         """Mosaic transform function.
@@ -2530,7 +2536,7 @@ class RandomAffine:
             num_bboxes = len(bboxes)
             if num_bboxes:
                 # homogeneous coordinates
-                xs = bboxes[:, [0, 2, 2, 0]].reshape(num_bboxes * 4)
+                xs = bboxes[:, [0, 0, 2, 2]].reshape(num_bboxes * 4)
                 ys = bboxes[:, [1, 3, 3, 1]].reshape(num_bboxes * 4)
                 ones = np.ones_like(xs)
                 points = np.vstack([xs, ys, ones])
