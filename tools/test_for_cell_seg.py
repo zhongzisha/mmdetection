@@ -210,6 +210,9 @@ def single_gpu_test(model,
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
 
+        # import pdb
+        # pdb.set_trace()
+
         batch_size = len(result)
         if show or out_dir:
             if batch_size == 1 and isinstance(data['img'][0], torch.Tensor):
@@ -232,33 +235,34 @@ def single_gpu_test(model,
                 else:
                     out_file = None
 
-                # import pdb
-                # pdb.set_trace()
                 img_prefix = img_meta['ori_filename'].replace(img_postfix, '')
-                img_id = img_maps[img_prefix]
-                ann_ids = coco.get_ann_ids(img_ids=[img_id])
-                anns = coco.load_anns(ann_ids)
-                gt_bboxes = []
-                gt_labels = []
-                for ann in anns:
-                    x1, y1, bw, bh = ann['bbox']
-                    gt_bboxes.append([x1, y1, x1 + bw, y1 + bh])
-                    gt_labels.append(ann['category_id'])
-                gt_bboxes = np.array(gt_bboxes)
-                gt_labels = np.array(gt_labels)
-                # gt_bboxes = dataset.get_ann_info(idx)['bboxes']
-                # gt_labels = dataset.get_ann_info(idx)['labels']
-                idx += 1
-                for gt_box, gt_label in zip(gt_bboxes, gt_labels):
-                    gt_box = gt_box.astype(np.int32)
-                    cv2.rectangle(img_show, (gt_box[0], gt_box[1]), (gt_box[2], gt_box[3]),
-                                  color=(0, 255, 0))
-                    cv2.putText(img_show,
-                                text='%s: %d' % (img_meta['ori_filename'], len(gt_bboxes)),
-                                org=(50, 100),
-                                fontScale=2,
-                                fontFace=1,
-                                color=(255, 0, 0))
+                if img_maps:
+                    # import pdb
+                    # pdb.set_trace()
+                    img_id = img_maps[img_prefix]
+                    ann_ids = coco.get_ann_ids(img_ids=[img_id])
+                    anns = coco.load_anns(ann_ids)
+                    gt_bboxes = []
+                    gt_labels = []
+                    for ann in anns:
+                        x1, y1, bw, bh = ann['bbox']
+                        gt_bboxes.append([x1, y1, x1 + bw, y1 + bh])
+                        gt_labels.append(ann['category_id'])
+                    gt_bboxes = np.array(gt_bboxes)
+                    gt_labels = np.array(gt_labels)
+                    # gt_bboxes = dataset.get_ann_info(idx)['bboxes']
+                    # gt_labels = dataset.get_ann_info(idx)['labels']
+                    idx += 1
+                    for gt_box, gt_label in zip(gt_bboxes, gt_labels):
+                        gt_box = gt_box.astype(np.int32)
+                        cv2.rectangle(img_show, (gt_box[0], gt_box[1]), (gt_box[2], gt_box[3]),
+                                      color=(0, 255, 0))
+                        cv2.putText(img_show,
+                                    text='%s: %d' % (img_meta['ori_filename'], len(gt_bboxes)),
+                                    org=(50, 100),
+                                    fontScale=2,
+                                    fontFace=1,
+                                    color=(255, 0, 0))
 
                 img_show2 = np.copy(img_show)
 
@@ -270,7 +274,9 @@ def single_gpu_test(model,
                     score_thr=show_score_thr)
 
                 encoded_masks = []
-                for class_id in range(1):
+                print(len(result[i][0]))
+                for class_id in range(3):
+                    print('class_id', class_id)
                     bbs = result[i][0][class_id]
                     sgs = result[i][1][class_id]
                     # print(bbs, sgs, type(bbs), type(sgs))
@@ -292,6 +298,8 @@ def single_gpu_test(model,
                                         fontScale=1,
                                         fontFace=1,
                                         color=(255, 0, 0))
+                    if len(mask) == 0:
+                        continue
                     mask = cp.stack(mask, axis=-1)
                     if check_overlap(mask): # if mask instances have overlap then fix it
                         mask = fix_overlap(mask)
@@ -302,10 +310,10 @@ def single_gpu_test(model,
                             all_results.append([img_prefix, rle])
 
                     used = np.zeros((ori_h, ori_w), dtype=int)
-                    for mask in pred_masks:
-                        mask = mask * (1 - used)
-                        used += mask
-                        rle = rle_encode(mask)
+                    for mask1 in pred_masks:
+                        mask1 = mask1 * (1 - used)
+                        used += mask1
+                        rle = rle_encode(mask1)
                         if rle:
                             alldata.append([img_prefix, rle])
                             encoded_masks.append(rle)
@@ -313,7 +321,9 @@ def single_gpu_test(model,
                     mask_all = None
                     if out_dir:
                         mask_all = cp.sum(mask, axis=-1) > 0
+                        print(type(mask_all), mask_all.shape)
                         mask_all = mask_all.get()
+
                         cv2.imwrite(os.path.join(out_dir, img_prefix + '_predicted.png'),
                                     np.concatenate([
                                         img_show2,
@@ -514,7 +524,7 @@ def parse_args():
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(
-        '--json_filename', default='data/towers/val/val.json', type=str)
+        '--json_filename', default='', type=str)
     parser.add_argument(
         '--img_postfix', default='.jpg', type=str)
     parser.add_argument(

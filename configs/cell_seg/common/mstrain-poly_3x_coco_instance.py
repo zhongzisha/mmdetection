@@ -2,7 +2,7 @@ _base_ = '../_base_/default_runtime.py'
 # dataset settings
 dataset_type = 'CocoDataset'
 data_root = 'data/cell_seg/'
-classes = ('cell', )
+classes = ('shsy5y', 'astro', 'cort')
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
@@ -52,20 +52,20 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             classes=classes,
-            ann_file=data_root + '/coco_train.json',
-            img_prefix=data_root + '/train/',
+            ann_file=data_root + '/annotations_train.json',
+            img_prefix=data_root + '/',
             pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/coco_val.json',
-        img_prefix=data_root + '/train/',
+        ann_file=data_root + '/annotations_val.json',
+        img_prefix=data_root + '/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=classes,
-        ann_file=data_root + '/coco_val.json',
-        img_prefix=data_root + '/train/',
+        ann_file=data_root + '/annotations_val.json',
+        img_prefix=data_root + '/',
         pipeline=test_pipeline))
 evaluation = dict(interval=4, metric=['bbox', 'segm'])
 
