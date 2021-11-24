@@ -165,7 +165,7 @@ def rle_decode(mask_rle, shape=(520, 704)):
     starts, lengths = [np.asarray(x, dtype=int) for x in (s[0:][::2], s[1:][::2])]
     starts -= 1
     ends = starts + lengths
-    img = np.zeros(shape[0]*shape[1], dtype=np.uint8)
+    img = np.zeros(shape[0] * shape[1], dtype=np.uint8)
     for lo, hi in zip(starts, ends):
         img[lo:hi] = 1
     return img.reshape(shape)  # Needed to align to RLE direction
@@ -235,7 +235,7 @@ def single_gpu_test(model,
                 else:
                     out_file = None
 
-                img_prefix = img_meta['ori_filename'].replace(img_postfix, '')
+                img_prefix = os.path.basename(img_meta['ori_filename']).replace(img_postfix, '')
                 if img_maps:
                     # import pdb
                     # pdb.set_trace()
@@ -275,13 +275,17 @@ def single_gpu_test(model,
 
                 encoded_masks = []
                 print(len(result[i][0]))
+
+                # import pdb
+                # pdb.set_trace()
+
+                mask = []
+                pred_masks = []
                 for class_id in range(3):
                     print('class_id', class_id)
                     bbs = result[i][0][class_id]
                     sgs = result[i][1][class_id]
                     # print(bbs, sgs, type(bbs), type(sgs))
-                    mask = []
-                    pred_masks = []
                     for bb, sg in zip(bbs, sgs):
                         box = bb[:4]
                         cnf = bb[4]
@@ -298,41 +302,41 @@ def single_gpu_test(model,
                                         fontScale=1,
                                         fontFace=1,
                                         color=(255, 0, 0))
-                    if len(mask) == 0:
-                        continue
-                    mask = cp.stack(mask, axis=-1)
-                    if check_overlap(mask): # if mask instances have overlap then fix it
-                        mask = fix_overlap(mask)
-                    for idx in range(mask.shape[-1]):
-                        mask_ins = mask[..., idx]
-                        rle = mask2rle(mask_ins)
-                        if rle:
-                            all_results.append([img_prefix, rle])
+                if len(mask) == 0:
+                    continue
+                mask = cp.stack(mask, axis=-1)
+                if check_overlap(mask):  # if mask instances have overlap then fix it
+                    mask = fix_overlap(mask)
+                for idx in range(mask.shape[-1]):
+                    mask_ins = mask[..., idx]
+                    rle = mask2rle(mask_ins)
+                    if rle:
+                        all_results.append([img_prefix, rle])
 
-                    used = np.zeros((ori_h, ori_w), dtype=int)
-                    for mask1 in pred_masks:
-                        mask1 = mask1 * (1 - used)
-                        used += mask1
-                        rle = rle_encode(mask1)
-                        if rle:
-                            alldata.append([img_prefix, rle])
-                            encoded_masks.append(rle)
+                used = np.zeros((ori_h, ori_w), dtype=int)
+                for mask1 in pred_masks:
+                    mask1 = mask1 * (1 - used)
+                    used += mask1
+                    rle = rle_encode(mask1)
+                    if rle:
+                        alldata.append([img_prefix, rle])
+                        encoded_masks.append(rle)
 
-                    mask_all = None
-                    if out_dir:
-                        mask_all = cp.sum(mask, axis=-1) > 0
-                        print(type(mask_all), mask_all.shape)
-                        mask_all = mask_all.get()
+                mask_all = None
+                if out_dir:
+                    mask_all = cp.sum(mask, axis=-1) > 0
+                    print(type(mask_all), mask_all.shape)
+                    mask_all = mask_all.get()
 
-                        cv2.imwrite(os.path.join(out_dir, img_prefix + '_predicted.png'),
-                                    np.concatenate([
-                                        img_show2,
-                                        np.stack([mask_all, mask_all, mask_all], axis=-1)*255
-                                    ], axis=1)
-                                    )
+                    cv2.imwrite(out_file.replace(img_postfix, '_predicted' + img_postfix),
+                                np.concatenate([
+                                    img_show2,
+                                    np.stack([mask_all, mask_all, mask_all], axis=-1) * 255
+                                ], axis=1)
+                                )
 
-                    del mask, rle, sgs, bbs, mask_all, pred_masks
-                    gc.collect()
+                del mask, rle, sgs, bbs, mask_all, pred_masks
+                gc.collect()
 
         # encode mask results
         if isinstance(result[0], tuple):
@@ -358,14 +362,14 @@ def single_gpu_test(model,
 
         # pdb.set_trace()
 
-    if len(alldata) > 0:
-        import pandas as pd
-        pred_df = pd.DataFrame(alldata, columns=['id','predicted'])
-        sub_df  = pd.read_csv('configs/cell_seg/sample_submission.csv')
-        del sub_df['predicted']
-        sub_df = sub_df.merge(pred_df, on='id', how='left')
-        sub_df.to_csv('submission1.csv',index=False)
-        sub_df.head()
+    # if len(alldata) > 0:
+    #     import pandas as pd
+    #     pred_df = pd.DataFrame(alldata, columns=['id', 'predicted'])
+    #     sub_df = pd.read_csv('configs/cell_seg/sample_submission.csv')
+    #     del sub_df['predicted']
+    #     sub_df = sub_df.merge(pred_df, on='id', how='left')
+    #     sub_df.to_csv('submission1.csv', index=False)
+    #     sub_df.head()
 
     return results
 
