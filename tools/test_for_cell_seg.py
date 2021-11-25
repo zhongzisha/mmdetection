@@ -200,7 +200,7 @@ def single_gpu_test(model,
     idx = 0
     if os.path.exists(json_filename):
         coco = COCO(json_filename)
-        img_maps = {v['file_name'].replace(img_postfix, ''): k for k, v in coco.imgs.items()}
+        img_maps = {os.path.basename(v['file_name']).replace(img_postfix, ''): k for k, v in coco.imgs.items()}
     else:
         coco = None
         img_maps = None
