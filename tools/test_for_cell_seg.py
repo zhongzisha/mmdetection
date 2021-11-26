@@ -240,8 +240,8 @@ def single_gpu_test(model,
                     # import pdb
                     # pdb.set_trace()
                     img_id = img_maps[img_prefix]
-                    ann_ids = coco.get_ann_ids(img_ids=[img_id])
-                    anns = coco.load_anns(ann_ids)
+                    ann_ids = coco.getAnnIds(imgIds=[img_id])
+                    anns = coco.loadAnns(ann_ids)
                     gt_bboxes = []
                     gt_labels = []
                     for ann in anns:
@@ -281,16 +281,30 @@ def single_gpu_test(model,
 
                 mask = []
                 pred_masks = []
-                for class_id in range(3):
-                    print('class_id', class_id)
-                    bbs = result[i][0][class_id]
-                    sgs = result[i][1][class_id]
-                    # print(bbs, sgs, type(bbs), type(sgs))
-                    for bb, sg in zip(bbs, sgs):
-                        box = bb[:4]
-                        cnf = bb[4]
-                        mask.append(cp.array(sg))
-                        pred_masks.append(sg)
+
+                det, seg = result[i]
+                for class_id in range(len(det)):
+                    # bbox results
+                    bboxes = det[class_id]
+                    # segm results
+                    # some detectors use different scores for bbox and mask
+                    if isinstance(seg, tuple):
+                        segms = seg[0][class_id]
+                        mask_score = seg[1][class_id]
+                    else:
+                        segms = seg[class_id]
+                        mask_score = [bbox[4] for bbox in bboxes]
+                    for j in range(bboxes.shape[0]):
+                        if isinstance(segms[j], dict) and 'counts' in segms[j] and \
+                                isinstance(segms[j]['counts'], bytes):
+                            segms[j]['counts'] = segms[j]['counts'].decode()
+                        # import pdb
+                        # pdb.set_trace()
+                        mask.append(cp.array(segms[j]))
+                        pred_masks.append(segms[j])
+
+                        box = bboxes[j][:4]   # xyxy
+                        cnf = bboxes[j][4]
                         if out_dir:
                             cv2.rectangle(img_show2,
                                           (int(box[0]), int(box[1])),
@@ -302,6 +316,29 @@ def single_gpu_test(model,
                                         fontScale=1,
                                         fontFace=1,
                                         color=(255, 0, 0))
+
+                # for class_id in range(3):
+                #     print('class_id', class_id)
+                #     bbs = result[i][0][class_id]
+                #     sgs = result[i][1][class_id]
+                #     # print(bbs, sgs, type(bbs), type(sgs))
+                #     for bb, sg in zip(bbs, sgs):
+                #         box = bb[:4]
+                #         cnf = bb[4]
+                #         mask.append(cp.array(sg))
+                #         pred_masks.append(sg)
+                #         if out_dir:
+                #             cv2.rectangle(img_show2,
+                #                           (int(box[0]), int(box[1])),
+                #                           (int(box[2]), int(box[3])),
+                #                           color=(0, 255, 255))
+                #             cv2.putText(img_show2,
+                #                         text='%.2f' % cnf,
+                #                         org=(int(box[0]), int(box[1])),
+                #                         fontScale=1,
+                #                         fontFace=1,
+                #                         color=(255, 0, 0))
+
                 if len(mask) == 0:
                     continue
                 mask = cp.stack(mask, axis=-1)
@@ -335,7 +372,7 @@ def single_gpu_test(model,
                                 ], axis=1)
                                 )
 
-                del mask, rle, sgs, bbs, mask_all, pred_masks
+                del mask, rle, det, seg, mask_all, pred_masks
                 gc.collect()
 
         # encode mask results
