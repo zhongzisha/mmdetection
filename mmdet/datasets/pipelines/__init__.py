@@ -12,7 +12,7 @@ from .test_time_aug import MultiScaleFlipAug
 from .transforms import (Albu, CutOut, Expand, MinIoURandomCrop, MixUp, Mosaic,
                          Normalize, Pad, PhotoMetricDistortion, RandomAffine,
                          RandomCenterCropPad, RandomCrop, RandomFlip,
-                         RandomShift, Resize, SegRescale)
+                         RandomShift, Resize, SegRescale, YOLOXHSVRandomAug)
 from .loading import LoadImageFromMemory
 
 
@@ -26,5 +26,5 @@ __all__ = [
     'InstaBoost', 'RandomCenterCropPad', 'AutoAugment', 'CutOut', 'Shear',
     'Rotate', 'ColorTransform', 'EqualizeTransform', 'BrightnessTransform',
     'ContrastTransform', 'Translate', 'RandomShift', 'Mosaic', 'MixUp',
-    'RandomAffine', 'LoadImageFromMemory'
+    'RandomAffine', 'LoadImageFromMemory', 'YOLOXHSVRandomAug'
 ]
